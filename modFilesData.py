@@ -1,9 +1,5 @@
 import sys
 import pathlib
-import threading
-import queue
-import time
-import psutil
 from functools import partial
 from queueThreads import PoolThreads
 
@@ -42,7 +38,7 @@ def clearFiles (fromDir, toDir=CONST_NEW_DIR, numberThreads=1):
         pool.mainQueue.put(partial(clearJson, file, toDir))
 
     pool.start()
-    
+
 if __name__ == "__main__":
     try:
         if len(sys.argv) == 2:

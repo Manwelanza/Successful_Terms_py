@@ -13,6 +13,7 @@ class PoolThreads ():
         self.queueLock = threading.Lock()
         self.nThreads = nThreads
         self.threads = []
+        self.active = False
         if (self.nThreads <= 0):
             self.nThreads = psutil.cpu_count() - 1
         
@@ -35,18 +36,37 @@ class PoolThreads ():
                 self.queueLock.release()
                 time.sleep(1)
     
-    def start (self):
-        self.exitFlag = False
-        for thread in self.threads:
-            thread.start()
-        
-        while not self.mainQueue.empty():
-            pass
-        
+    def stop(self):
         self.exitFlag = True
 
-        for thread in self.threads:
-            thread.join()
+    def start (self):
+        try:
+            self.active = True
+            self.exitFlag = False
+            for thread in self.threads:
+                thread.start()
+            
+            
+            while not self.mainQueue.empty():
+                time.sleep(1)
+            
+            self.exitFlag = True
+
+            for thread in self.threads:
+                thread.join()
+            
+            self.active = False
+        
+        except (KeyboardInterrupt, SystemExit):
+            print("Error")
+            if self.exitFlag is False:
+                print("Killing active Threads")
+                self.stop()
+        except Exception as e:
+            print("Error {0}: {1}.".format(type(e), e))
+            if self.exitFlag is False:
+                print("Killing active Threads")
+                self.stop()
 
 
 class PoolThread (threading.Thread):
@@ -56,10 +76,12 @@ class PoolThread (threading.Thread):
         self.threadId = threadId
         self.name = name
         self.pool = pool
+        
 
     def run(self):
         print("Start " + self.name)
         self.pool.doAction()
         print("Finish " + self.name)
+
 
     
