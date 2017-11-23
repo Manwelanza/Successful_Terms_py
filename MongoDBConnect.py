@@ -32,7 +32,7 @@ class Connect2MongoDB ():
         self.db = dbName
 
     def setCollection (self, collectionName):
-        self.collection = collection
+        self.collection = collectionName
 
     def setData (self, dbName, collectionName):
         self.db = dbName

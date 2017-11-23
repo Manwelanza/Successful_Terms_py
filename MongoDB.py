@@ -1,6 +1,6 @@
 class MongoDB ():
-    TWEETS_COLLECTION = 'tweets'
-    CLEAR_TWEETS_COLLECTION = 'clearTweet'
+    TWEETS_COLLECTION = 'tweets' # 0
+    CLEAR_TWEETS_COLLECTION = 'clearTweet' # 1
 
     def __init__(self, connect2MongoDB):
         self.connect2MongoDB = connect2MongoDB
@@ -15,4 +15,19 @@ class MongoDB ():
             return self.connect2MongoDB.getCollection(MongoDB.CLEAR_TWEETS_COLLECTION).find(query)
 
         return None
-    
+
+    def insert_one (self, collection, data = None):
+        if data is not None:
+            if (collection == 0 or collection == MongoDB.TWEETS_COLLECTION):
+                self.connect2MongoDB.getCollection(MongoDB.TWEETS_COLLECTION).insert_one(data)
+                return True
+
+            elif collection == 1 or collection == MongoDB.CLEAR_TWEETS_COLLECTION:
+                self.connect2MongoDB.getCollection(MongoDB.CLEAR_TWEETS_COLLECTION).insert_one(data)
+                return True
+
+            else:
+                return False
+        
+        else:
+            return False

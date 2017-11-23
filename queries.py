@@ -1,6 +1,3 @@
-CONST_RT = "retweeted_status"
-CONST_QUOTE = "quoted_status"
-
 def getRTs ():
     return {"retweeted_status": { "$exists" : True}}
 
@@ -21,4 +18,7 @@ def getReplys ():
 
 def getTweet (idLabel, idValue):
     return {idLabel: idValue}
+
+
+
 

@@ -3,6 +3,7 @@ import sys
 from MongoDBConnect import *
 from MongoDB import *
 from queries import *
+from processTweet import *
 
 if __name__ == "__main__":
     connectMongoDB = Connect2MongoDB('localhost', 27017)
@@ -20,15 +21,16 @@ if __name__ == "__main__":
     tweet = db.find(0, getTweet("id_str",'917946195410128897'))
     print(sys.getdefaultencoding())
     print (tweet.count())
-
+    process = ProcessTweet (db)
     for t in tweets:
         isRT = False
-        if CONST_RT in t:
+        process.process(t)
+        if ProcessTweet.CONST_RT in t:
             isRT = True
             RTcount += 1
             #processRT(t)
         
-        if CONST_QUOTE in t:
+        if ProcessTweet.CONST_QUOTE in t:
             quoteCount += 1
             #processQuote(t, isRT)
 
