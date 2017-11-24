@@ -31,3 +31,27 @@ class MongoDB ():
         
         else:
             return False
+
+    def update_one (self, collection, idlabel, idvalue, data):
+        if data is not None and idvalue is not None and idlabel is not None:
+            if (collection == 0 or collection == MongoDB.TWEETS_COLLECTION):
+                self.connect2MongoDB.getCollection(MongoDB.TWEETS_COLLECTION).update_one (
+                    {idlabel : idvalue},
+                    data,
+                    upsert = False
+                )
+                return True
+
+            elif collection == 1 or collection == MongoDB.CLEAR_TWEETS_COLLECTION:
+                self.connect2MongoDB.getCollection(MongoDB.CLEAR_TWEETS_COLLECTION).update_one (
+                    {idlabel : idvalue},
+                    data,
+                    upsert = False
+                )
+                return True
+
+            else:
+                return False
+        
+        else:
+            return False
