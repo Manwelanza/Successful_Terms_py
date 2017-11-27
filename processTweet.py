@@ -51,7 +51,7 @@ class ProcessTweet ():
     def processNormalTweet (self, tweet, isQuote, isReply):
         tweetId = tweet[ProcessTweet.CONST_ID]
         if self.db.find(1, getTweet ("tweetId", tweetId)).count() == 0:
-            self.db.insert_one(1, getInsertClearTweet(tweet, isQuote, isReply))
+            self.db.insert_one(1, getInsertClearTweet(tweet, isQuote, isReply, self))
 
     def process (self, tweet):
         auxTweet = tweet
