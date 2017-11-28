@@ -13,6 +13,7 @@ class ProcessTweet ():
     CONST_EXTENDED_TWEET = "extended_tweet"
     CONST_REPLY_TO_STATUS_ID = "in_reply_to_status_id_str"
     CONST_QUOTE_TO_STATUS_ID = "quoted_status_id_str"
+    CONST_QUOTE_STATUS = "is_quote_status"
     CONST_ENTITIES = "entities"
     CONST_DISPLAY_TEXT_RANGE = "display_text_range"
     CONST_HASHTAGS = "hashtags"
@@ -27,6 +28,7 @@ class ProcessTweet ():
     CONST_COORDINATES = "coordinates"
     CONST_USER = "user"
     CONST_CREATED_AT = "created_at"
+    CONST_URLS = "urls"
     
     def __init__ (self, dataBase):
         self.db = dataBase
@@ -50,8 +52,28 @@ class ProcessTweet ():
 
     def processNormalTweet (self, tweet, isQuote, isReply):
         tweetId = tweet[ProcessTweet.CONST_ID]
-        if self.db.find(1, getTweet ("tweetId", tweetId)).count() == 0:
+        clearTweets = self.db.find(1, getTweet ("tweetId", tweetId))
+        if clearTweets.count() == 0:
             self.db.insert_one(1, getInsertClearTweet(tweet, isQuote, isReply, self))
+        else:
+            print ("update process")
+            updateFields = []
+            print ("Saved RT {0} -- New RT {1}".format(clearTweets[0][ProcessTweet.CONST_RT_COUNT], tweet[ProcessTweet.CONST_RT_COUNT]))
+            if clearTweets[0][ProcessTweet.CONST_RT_COUNT] < tweet[ProcessTweet.CONST_RT_COUNT]:
+                updateFields.append (ProcessTweet.CONST_RT_COUNT)
+            
+            print ("Saved FAV {0} -- New FAV {1}".format(clearTweets[0][ProcessTweet.CONST_FAVORITE_COUNT], tweet[ProcessTweet.CONST_FAVORITE_COUNT]))
+            if clearTweets[0][ProcessTweet.CONST_FAVORITE_COUNT] < tweet[ProcessTweet.CONST_FAVORITE_COUNT]:
+                updateFields.append (ProcessTweet.CONST_FAVORITE_COUNT)
+
+            print ("Saved QT {0} -- New QT {1}".format(clearTweets[0][ProcessTweet.CONST_QUOTE_COUNT], tweet[ProcessTweet.CONST_QUOTE_COUNT]))
+            if clearTweets[0][ProcessTweet.CONST_QUOTE_COUNT] < tweet[ProcessTweet.CONST_QUOTE_COUNT]:
+                updateFields.append (ProcessTweet.CONST_QUOTE_COUNT)
+
+            if len(updateFields) > 0:
+                print("update done")
+                self.db.update_one(1, "tweetId", tweetId, updateClearTweets(tweet, updateFields))
+            
 
     def process (self, tweet):
         auxTweet = tweet
@@ -59,7 +81,7 @@ class ProcessTweet ():
             # TODO: Do something with RTs
             auxTweet = auxTweet[ProcessTweet.CONST_RT]
 
-        while ProcessTweet.CONST_QUOTE in auxTweet:
+        while ProcessTweet.CONST_QUOTE in auxTweet and auxTweet[ProcessTweet.CONST_QUOTE_STATUS] is True:
             isReply = auxTweet[ProcessTweet.CONST_REPLY] != None
             self.processNormalTweet(auxTweet, isReply, True)
             auxTweet = auxTweet[ProcessTweet.CONST_QUOTE]

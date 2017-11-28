@@ -37,7 +37,7 @@ class MongoDB ():
             if (collection == 0 or collection == MongoDB.TWEETS_COLLECTION):
                 self.connect2MongoDB.getCollection(MongoDB.TWEETS_COLLECTION).update_one (
                     {idlabel : idvalue},
-                    data,
+                    {"$set": data},
                     upsert = False
                 )
                 return True
@@ -45,7 +45,7 @@ class MongoDB ():
             elif collection == 1 or collection == MongoDB.CLEAR_TWEETS_COLLECTION:
                 self.connect2MongoDB.getCollection(MongoDB.CLEAR_TWEETS_COLLECTION).update_one (
                     {idlabel : idvalue},
-                    data,
+                    {"$set": data},
                     upsert = False
                 )
                 return True

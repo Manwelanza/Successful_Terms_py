@@ -9,14 +9,6 @@ CONST_MENTIONS = "mentions"
 CONST_TERMS_COUNT = "terms_count"
 
 
-def getInsertNewClearTweet (tweetId):
-    return ({
-                "tweetId" : tweetId,
-                "rts": 0,
-                "quotes": 0,
-                "replys": 0
-            })
-
 def getInsertClearTweet (tweet, isQuote, isReply, processTweet):
     if tweet is None:
         return None
@@ -26,7 +18,10 @@ def getInsertClearTweet (tweet, isQuote, isReply, processTweet):
     
     if isQuote is True:
         clearTweet[CONST_IS_QUOTE] = True
-        clearTweet[CONST_QUOTE_TO] = tweet[processTweet.CONST_QUOTE_TO_STATUS_ID]
+        if processTweet.CONST_QUOTE_TO_STATUS_ID in tweet:
+            clearTweet[CONST_QUOTE_TO] = tweet[processTweet.CONST_QUOTE_TO_STATUS_ID]
+        else:
+            clearTweet[CONST_QUOTE_TO] = None
     else:
         clearTweet[CONST_IS_QUOTE] = False
         clearTweet[CONST_QUOTE_TO] = None
@@ -59,11 +54,27 @@ def loadTruncatedData (tweet, clearTweet, processTweet):
     clearTweet[processTweet.CONST_TEXT] = text
     clearTweet[CONST_TERMS_COUNT] = len(text.split())
     clearTweet[CONST_IS_LONG] = True
-    clearTweet[CONST_CHARACTERS] = tweet[processTweet.CONST_DISPLAY_TEXT_RANGE][1] + tweet[processTweet.CONST_EXTENDED_TWEET][processTweet.CONST_DISPLAY_TEXT_RANGE][1]
+    
+    if processTweet.CONST_DISPLAY_TEXT_RANGE in tweet and processTweet.CONST_DISPLAY_TEXT_RANGE in tweet[processTweet.CONST_EXTENDED_TWEET]:
+        clearTweet[CONST_CHARACTERS] = tweet[processTweet.CONST_DISPLAY_TEXT_RANGE][1] + tweet[processTweet.CONST_EXTENDED_TWEET][processTweet.CONST_DISPLAY_TEXT_RANGE][1]
+    else:
+        clearTweet[CONST_CHARACTERS] = -1
+    
+    
     clearTweet[processTweet.CONST_HASHTAGS] = tweet[processTweet.CONST_EXTENDED_TWEET][processTweet.CONST_ENTITIES][processTweet.CONST_HASHTAGS]
     clearTweet[CONST_MENTIONS] = tweet[processTweet.CONST_EXTENDED_TWEET][processTweet.CONST_ENTITIES][processTweet.CONST_USER_MENTIONS]
     clearTweet[processTweet.CONST_SYMBOLS] = tweet[processTweet.CONST_EXTENDED_TWEET][processTweet.CONST_ENTITIES][processTweet.CONST_SYMBOLS]
-    clearTweet[processTweet.CONST_MEDIA] = tweet[processTweet.CONST_EXTENDED_TWEET][processTweet.CONST_ENTITIES][processTweet.CONST_MEDIA]
+    
+    if processTweet.CONST_MEDIA in tweet[processTweet.CONST_EXTENDED_TWEET][processTweet.CONST_ENTITIES]:
+        clearTweet[processTweet.CONST_MEDIA] = tweet[processTweet.CONST_EXTENDED_TWEET][processTweet.CONST_ENTITIES][processTweet.CONST_MEDIA]
+    else:
+        clearTweet[processTweet.CONST_MEDIA] = None
+    
+    if processTweet.CONST_URLS in tweet[processTweet.CONST_EXTENDED_TWEET][processTweet.CONST_ENTITIES]:
+        clearTweet[processTweet.CONST_URLS] = tweet[processTweet.CONST_EXTENDED_TWEET][processTweet.CONST_ENTITIES][processTweet.CONST_URLS]
+    else:
+        clearTweet[processTweet.CONST_URLS] = None
+
     return clearTweet
 
 def loadNoTruncatedData (tweet, clearTweet, processTweet):
@@ -71,9 +82,24 @@ def loadNoTruncatedData (tweet, clearTweet, processTweet):
     clearTweet[processTweet.CONST_TEXT] = text
     clearTweet[CONST_TERMS_COUNT] = len(text.split())
     clearTweet[CONST_IS_LONG] = False
-    clearTweet[CONST_CHARACTERS] = tweet[processTweet.CONST_DISPLAY_TEXT_RANGE][1]
+
+    if processTweet.CONST_DISPLAY_TEXT_RANGE in tweet:
+        clearTweet[CONST_CHARACTERS] = tweet[processTweet.CONST_DISPLAY_TEXT_RANGE][1]
+    else:
+        clearTweet[CONST_CHARACTERS] = -1
+
     clearTweet[processTweet.CONST_HASHTAGS] = tweet[processTweet.CONST_ENTITIES][processTweet.CONST_HASHTAGS]
     clearTweet[CONST_MENTIONS] = tweet[processTweet.CONST_ENTITIES][processTweet.CONST_USER_MENTIONS]
     clearTweet[processTweet.CONST_SYMBOLS] = tweet[processTweet.CONST_ENTITIES][processTweet.CONST_SYMBOLS]
-    clearTweet[processTweet.CONST_MEDIA] = tweet[processTweet.CONST_ENTITIES][processTweet.CONST_MEDIA]
+    
+    if processTweet.CONST_MEDIA in tweet[processTweet.CONST_ENTITIES]:
+        clearTweet[processTweet.CONST_MEDIA] = tweet[processTweet.CONST_ENTITIES][processTweet.CONST_MEDIA]
+    else:
+        clearTweet[processTweet.CONST_MEDIA] = None
+
+    if processTweet.CONST_URLS in tweet[processTweet.CONST_ENTITIES]:
+        clearTweet[processTweet.CONST_URLS] = tweet[processTweet.CONST_ENTITIES][processTweet.CONST_URLS]
+    else:
+        clearTweet[processTweet.CONST_URLS] = None
+
     return clearTweet
