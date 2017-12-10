@@ -7,6 +7,10 @@ CONST_IS_LONG = "isLong"
 CONST_CHARACTERS = "characters"
 CONST_MENTIONS = "mentions"
 CONST_TERMS_COUNT = "terms_count"
+CONST_VISIBILITY_VALUE = "visibility_value"
+CONST_VISIBILITY_COUNT_RT = "visibility_count_RT"
+CONST_VISIBILITY_COUNT_QUOTE = "visibility_count_quote"
+CONST_VISIBILITY_COUNT_REPLY = "visibility_count_reply"
 
 
 def getInsertClearTweet (tweet, isQuote, isReply, processTweet):
@@ -15,6 +19,10 @@ def getInsertClearTweet (tweet, isQuote, isReply, processTweet):
 
     clearTweet = {}
     clearTweet[CONST_TWEET_ID] = tweet[processTweet.CONST_ID]
+    clearTweet[CONST_VISIBILITY_VALUE] = 0
+    clearTweet[CONST_VISIBILITY_COUNT_RT] = 0
+    clearTweet[CONST_VISIBILITY_COUNT_QUOTE] = 0
+    clearTweet[CONST_VISIBILITY_COUNT_REPLY] = 0
     
     if isQuote is True:
         clearTweet[CONST_IS_QUOTE] = True

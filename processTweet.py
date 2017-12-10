@@ -27,8 +27,13 @@ class ProcessTweet ():
     CONST_LANGUAGE = "lang"
     CONST_COORDINATES = "coordinates"
     CONST_USER = "user"
+    CONST_FOLLOWERS_COUNT = "followers_count"
     CONST_CREATED_AT = "created_at"
     CONST_URLS = "urls"
+
+    CONST_RT_VALUE = 1
+    CONST_QUOTE_VALUE = 1
+    CONST_REPLY_VALUE = 0.5
     
     def __init__ (self, dataBase):
         self.db = dataBase
@@ -50,7 +55,7 @@ class ProcessTweet ():
             self.isReply = False
 
 
-    def processNormalTweet (self, tweet, isQuote, isReply):
+    def processNormalTweet (self, tweet, isReply, isQuote):
         tweetId = tweet[ProcessTweet.CONST_ID]
         clearTweets = self.db.find(1, getTweet ("tweetId", tweetId))
         if clearTweets.count() == 0:
@@ -77,17 +82,91 @@ class ProcessTweet ():
 
     def process (self, tweet):
         auxTweet = tweet
+        tweets = []
         if ProcessTweet.CONST_RT in tweet:
             # TODO: Do something with RTs
+            tweets.append({"type":"RT", "tweet":auxTweet, "isReply":False})
             auxTweet = auxTweet[ProcessTweet.CONST_RT]
+            
 
         while ProcessTweet.CONST_QUOTE in auxTweet and auxTweet[ProcessTweet.CONST_QUOTE_STATUS] is True:
             isReply = auxTweet[ProcessTweet.CONST_REPLY] != None
-            self.processNormalTweet(auxTweet, isReply, True)
+            tweets.append({"type":"quote", "tweet":auxTweet, "isReply":isReply})
+            #self.processNormalTweet(auxTweet, isReply, True)
             auxTweet = auxTweet[ProcessTweet.CONST_QUOTE]
 
         isReply = auxTweet[ProcessTweet.CONST_REPLY] != None
-        self.processNormalTweet(auxTweet, isReply, False)    
+        tweets.append({"type":"normal", "tweet":auxTweet, "isReply":isReply})
+        #self.processNormalTweet(auxTweet, isReply, False)
+
+        for t in reversed(tweets):
+            self.auxProcess(t)
+    
+    def auxProcess (self, tweetInfo):
+        if tweetInfo["type"] == "RT":
+            self.processRT (tweetInfo["tweet"])
+        elif tweetInfo["type"] == "quote":
+            self.processNormalTweet(tweetInfo["tweet"], tweetInfo["isReply"], True)
+        else:
+            self.processNormalTweet(tweetInfo["tweet"], tweetInfo["isReply"], False)
+
+    def processRT (self, tweet):
+        toTweetId = tweet[ProcessTweet.CONST_RT][ProcessTweet.CONST_ID]
+        updateFields=[]
+        if toTweetId != None:
+            value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_RT_VALUE
+            updateFields.append({"field":CONST_VISIBILITY_VALUE, "value":value, "type":"+"})
+            updateFields.append({"field":CONST_VISIBILITY_COUNT_RT, "value":1, "type":"+"})
+            #Crear metodo para solo actualizar clearTweet si no se ha contado ya el RT
+            #update toTweetId with updateFields
+
+
+    def processQuote (self, tweet, isReply):
+        tweetId = tweet[ProcessTweet.CONST_ID]
+        quoteId = tweet[ProcessTweet.CONST_QUOTE_TO_STATUS_ID]
+        value2Quote =  ProcessTweet.CONST_QUOTE_VALUE
+        replyId = None
+        updateFieldsQuote=[]
+        updateFieldsReply=[]
+        updateFieldsTweet=[]
+
+        if isReply:
+            replyId = tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID]
+
+        if quoteId != None and replyId != None and quoteId != replyId:
+            value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_REPLY_VALUE
+            updateFieldsQuote.append({"field":CONST_VISIBILITY_VALUE, "value":value, "type":"+"})
+            updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_QUOTE, "value":1, "type":"+"})
+            updateFieldsReply.append({"field":CONST_VISIBILITY_VALUE, "value":value, "type":"+"})
+            updateFieldsReply.append({"field":CONST_VISIBILITY_COUNT_REPLY, "value":1, "type":"+"})
+            #update quoteId with updateFieldsQuote
+            #update replyId with updateFieldsReply
+
+        elif quoteId != None and replyId != None and quoteId == replyId:
+            value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_REPLY_VALUE
+            updateFieldsQuote.append({"field":CONST_VISIBILITY_VALUE, "value":value, "type":"+"})
+            updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_QUOTE, "value":1, "type":"+"})
+            updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_REPLY, "value":1, "type":"+"})
+            #update quoteId with updateFieldsQuote
+
+        elif quoteId != None and replyId == None:
+            value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_QUOTE_VALUE
+            updateFieldsQuote.append({"field":CONST_VISIBILITY_VALUE, "value":value, "type":"+"})
+            updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_QUOTE, "value":1, "type":"+"})
+            #update quoteId with updateFieldsQuote
+
+        #Crear metodo para solo actualizar clearTweet si no se ha contado ya la quote
+        
+        #Crear array con una o dos queries para actualiar (depende de lso if/else de antes)
+        #Crear otra query para actualizar el tweet del quote (metodo processNormalTweet) 
+        #Crear consulta de update en bulk (buscar como se hace)
+       
+
+    def processNormal (self, tweet, isReply):
+        #Actualizar replyID si es reply
+        #metodo processNormalTweet
+        pass
+
 
     def getOriginalTweet(self, tweet):
         auxTweet = tweet

@@ -25,9 +25,17 @@ with driver.session() as session:
 """
 
 db = Neo4jDB (Connect2Neo4J (CONST_NEO4J_URI, CONST_NEO4J_USER, CONST_NEO4J_PASSWORD))
-
+"""
 db.upsertTweet("1", 0)
 db.upsertTweet("2", 0)
 db.upsertTweet("3", 5)
 db.upsertTweet("1", 2)
 db.upsertTweet("1", 1)
+"""
+"""
+with [{"idValue":"1", "valueField1":0}, {"idValue":"2", "valueField1":0}, {"idValue":"3", "valueField1":5}, {"idValue":"1", "valueField1":2},{"idValue":"1", "valueField1":1}] as data:
+    for item in data:
+        db.upsertTweet(item["idValue"], item["valueField1"])
+"""
+for item in [{"idValue":"1", "valueField1":0}, {"idValue":"2", "valueField1":0}, {"idValue":"3", "valueField1":5}, {"idValue":"1", "valueField1":2},{"idValue":"1", "valueField1":1}]:
+    db.upsertTweet(item["idValue"], item["valueField1"])

@@ -11,8 +11,19 @@ class Neo4jDB():
             return None
 
     def upsertTweet (self, tweetId, value):
+        """
         query = "MERGE (t:Tweet {value: '" + tweetId + "'}) "
         query += "ON MATCH SET t.visibility = t.visibility + " + str(value) + " "
         query += "ON CREATE SET t = {value: '" + tweetId + "', visibility: 0} "
+        """
+        query =     "MERGE (t:Tweet {id:$id}) " 
+        query +=    "ON MATCH SET t.visibility = t.visibility + $visivility " 
+        query +=    "ON CREATE SET t = {id:$id, visibility:0}"
         
-        return self.callDB(query)
+        db = self.connect2Neo4J.getDB()
+        if db != None:
+            return db.run(query, id=tweetId, visivility=value)
+        else:
+            return None
+
+        
