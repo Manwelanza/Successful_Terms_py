@@ -19,6 +19,15 @@ def getReplys ():
 def getTweet (idLabel, idValue):
     return {idLabel: idValue}
 
+def getHistory(tweetId, userId, type_str = None):
+    query = {}
+    query ["tweetId"] = tweetId
+    query ["userId"] = userId
+    if type_str != None:
+        query["type"] = type_str
+
+    return query
+
 
 
 

@@ -12,6 +12,17 @@ CONST_VISIBILITY_COUNT_RT = "visibility_count_RT"
 CONST_VISIBILITY_COUNT_QUOTE = "visibility_count_quote"
 CONST_VISIBILITY_COUNT_REPLY = "visibility_count_reply"
 
+CONST_USER_ID = "userId"
+CONST_TYPE = "type"
+
+
+def getInsertHistory (tweetId, userId, type_str):
+    history = {}
+    history[CONST_TWEET_ID] = tweetId
+    history[CONST_USER_ID] = userId
+    history[CONST_TYPE]= type_str
+    return history
+
 
 def getInsertClearTweet (tweet, isQuote, isReply, processTweet):
     if tweet is None:
