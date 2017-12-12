@@ -21,13 +21,11 @@ def updateClearTweetsV2 (updateFields):
         else:
             setValues[field["field"]] = field["value"]
     
-
-    #TODO: if dictionary is empty is not working right
     
-    if not incValues:
+    if len(incValues) > 0:
         result["$inc"] = incValues
 
-    if not setValues:
+    if len(setValues) > 0:
         result["$set"] = setValues
 
     return result

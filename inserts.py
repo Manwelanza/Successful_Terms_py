@@ -11,16 +11,20 @@ CONST_VISIBILITY_VALUE = "visibility_value"
 CONST_VISIBILITY_COUNT_RT = "visibility_count_RT"
 CONST_VISIBILITY_COUNT_QUOTE = "visibility_count_quote"
 CONST_VISIBILITY_COUNT_REPLY = "visibility_count_reply"
+CONST_RATIO_SUCCESS = "RS"
 
 CONST_USER_ID = "userId"
 CONST_TYPE = "type"
+CONST_TO_TWEET_ID = "toTweetId"
+CONST_DATE = "date"
 
-
-def getInsertHistory (tweetId, userId, type_str):
+def getInsertHistory (tweetId, userId, toTweetId, type_str, date):
     history = {}
     history[CONST_TWEET_ID] = tweetId
+    history[CONST_TO_TWEET_ID] = toTweetId
     history[CONST_USER_ID] = userId
     history[CONST_TYPE]= type_str
+    history[CONST_DATE] = date
     return history
 
 
@@ -34,6 +38,9 @@ def getInsertClearTweet (tweet, isQuote, isReply, processTweet):
     clearTweet[CONST_VISIBILITY_COUNT_RT] = 0
     clearTweet[CONST_VISIBILITY_COUNT_QUOTE] = 0
     clearTweet[CONST_VISIBILITY_COUNT_REPLY] = 0
+    clearTweet[processTweet.CONST_CREATED_AT] = tweet[processTweet.CONST_CREATED_AT]
+
+    clearTweet[CONST_RATIO_SUCCESS] = processTweet.getRatioSuccess(tweet)
     
     if isQuote is True:
         clearTweet[CONST_IS_QUOTE] = True
