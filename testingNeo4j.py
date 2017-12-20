@@ -30,3 +30,17 @@ db.upsertTweet("2", 0)
 db.upsertTweet("3", 5)
 db.upsertTweet("1", 2)
 db.upsertTweet("1", 1)
+
+
+"""
+Ideas para el grafo:
+    * Si es normalTweet consultar si existe y traer id_str y profundidad de su padre y de los padres de los padres
+        * Si no existe insertar con profundidad 0 (siempre se mira primero la base)
+        * Si existe 
+            * Si no es reply, ni quote no hacer nada
+            * Si es reply, perlo no quote actualizar padre en cadena hacia arriba
+            * Si es reply y quote no hacer nada (ya se habra hecho en el procesamiento de quote)
+    * Si es RT actualizar su padre y padre de su padre
+    * Si es quote (sea reply o no) actualizar padre y padre de padres y llamar a normalTweet para almacenar el tweet 
+
+"""
