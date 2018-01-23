@@ -32,6 +32,26 @@ db.upsertTweet("1", 2)
 db.upsertTweet("1", 1)
 
 
+#print(db.searchTweet("2").values())
+
+#print(list(db.searchTweet("2").records())[0].values()[0])
+#print(list(db.searchTweet("2").records())[0].values())
+tweetId = "4"
+data = list(db.searchTweet(tweetId).records())
+
+
+if (len(data) > 0):
+    print("Search")
+    print(data[0].keys()[0])
+    for n in data:
+        print(n["t"].get("id"))
+else:
+    print("Insert")
+    #db.insertTweet({"id":tweetId, "visibility":5})
+    #db.insertRelation("1", tweetId, "RT")
+    db.insertTweetAndRelation("1", {"id":tweetId, "visibility":5}, "RT")
+
+
 """
 Ideas para el grafo:
     * Si es normalTweet consultar si existe y traer id_str y profundidad de su padre y de los padres de los padres
