@@ -27,10 +27,18 @@ class Neo4jDB():
             return None
 
     def searchTweet (self, tweetId):
-        query = "MATCH (t:Tweet {id:$id}) RETURN t"
+        query = "MATCH (t:Tweet {id:$id}) RETURN t as tweet"
         db = self.connect2Neo4J.getDB()
         if db != None:
             return db.run(query, id=tweetId)
+        else:
+            return None
+
+    def getPath (self, sourceId):
+        query = "MATCH (t1:Tweet {id:$id})-[r:RELTYPE *..]->(t2:Tweet) RETURN t2 as tweet ORDER BY t2.level DESC"
+        db = self.connect2Neo4J.getDB()
+        if db != None:
+            return db.run(query, id=sourceId)
         else:
             return None
 
@@ -43,20 +51,35 @@ class Neo4jDB():
         else:
             return False
 
-    def insertRelation (self, parentId, childId, relationType):
-        query = "MATCH (t1:Tweet {id:$id1}), (t2:Tweet {id:$id2}) CREATE (t1)-[r:RELTYPE {type:$relType}]->(t2)"
+    def insertRelation (self, parentId, childId):
+        query = "MATCH (t1:Tweet {id:$id1}), (t2:Tweet {id:$id2}) CREATE (t1)-[r:RELTYPE]->(t2)"
         db = self.connect2Neo4J.getDB()
         if db != None:
-            db.run(query, id1=childId, id2=parentId, relType=relationType)
+            db.run(query, id1=childId, id2=parentId)
             return True
         else:
             return False
     
-    def insertTweetAndRelation (self, parentId, dataToInsert, relationType):
-        query = "MATCH (t1:Tweet {id:$id}) CREATE (t2:Tweet $data)-[r:RELTYPE {type:$relType}]->(t1)"
+    def insertTweetAndRelation (self, parentId, dataToInsert):
+        query = "MATCH (t1:Tweet {id:$id}) CREATE (t2:Tweet $data)-[r:RELTYPE]->(t1)"
         db = self.connect2Neo4J.getDB()
         if db != None:
-            db.run(query, id=parentId, data=dataToInsert, relType=relationType)
+            db.run(query, id=parentId, data=dataToInsert)
             return True
         else:
             return False
+
+    def bulkUpdate (self, dataList):
+        query = """
+            UNWIND {rows} as row
+            MATCH (t:Tweet {id:row.id}) 
+            USING INDEX t:Tweet(id) 
+            SET t.visibility = t.visibility + row.visibility
+            """
+        db = self.connect2Neo4J.getDB()
+        if db != None:
+            db.run(query, rows=dataList)
+            return True
+        else:
+            return False
+            
