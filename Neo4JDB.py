@@ -60,11 +60,11 @@ class Neo4jDB():
         else:
             return False
     
-    def insertTweetAndRelation (self, parentId, dataToInsert):
-        query = "MATCH (t1:Tweet {id:$id}) CREATE (t2:Tweet $data)-[r:RELTYPE]->(t1)"
+    def insertTweetAndRelation (self, parentId, childId, relType):
+        query = "MATCH (t1:Tweet {id:$parentId}) CREATE (t2:Tweet {id:$childId, visibility:0, level:t1.level+1, parentId:t1.id, type:$relType})-[r:RELTYPE]->(t1)"
         db = self.connect2Neo4J.getDB()
         if db != None:
-            db.run(query, id=parentId, data=dataToInsert)
+            db.run(query, parentId=parentId, childId=childId, relType=relType)
             return True
         else:
             return False

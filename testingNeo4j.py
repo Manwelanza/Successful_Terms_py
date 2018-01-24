@@ -34,17 +34,17 @@ db.upsertTweet("1", 1)"""
 
 db.insertTweet({"id":"1", "visibility":0, "level":0, "type":"normal"})
 
-db.insertTweetAndRelation("1", {"id":"2", "visibility":0, "level":1, "parentId":"1", "type":"QT"})
-db.insertTweetAndRelation("1", {"id":"3", "visibility":0, "level":1, "parentId":"1", "type":"RP"})
-db.insertTweetAndRelation("1", {"id":"4", "visibility":0, "level":1, "parentId":"1", "type":"RT"})
+db.insertTweetAndRelation("1", "2", "QT")
+db.insertTweetAndRelation("1", "3", "RP")
+db.insertTweetAndRelation("1", "4", "RT")
 
-db.insertTweetAndRelation("2", {"id":"5", "visibility":0, "level":2, "parentId":"2", "type":"QT"})
-db.insertTweetAndRelation("2", {"id":"6", "visibility":0, "level":2, "parentId":"2", "type":"RT"})
-db.insertTweetAndRelation("3", {"id":"7", "visibility":0, "level":2, "parentId":"3", "type":"RT"})
+db.insertTweetAndRelation("2", "5", "QT")
+db.insertTweetAndRelation("2", "6", "RT")
+db.insertTweetAndRelation("3", "7", "RT")
 
-db.insertTweetAndRelation("5", {"id":"8", "visibility":0, "level":3, "parentId":"5", "type":"QT"})
-db.insertTweetAndRelation("5", {"id":"9", "visibility":0, "level":3, "parentId":"5", "type":"RP"})
-db.insertTweetAndRelation("5", {"id":"10", "visibility":0, "level":3, "parentId":"5", "type":"RT"})
+db.insertTweetAndRelation("5", "8", "QT")
+db.insertTweetAndRelation("5", "9", "RP")
+db.insertTweetAndRelation("5", "10", "RT")
 
 
 tweetId = "9"
