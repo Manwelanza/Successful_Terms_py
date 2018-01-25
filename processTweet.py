@@ -35,8 +35,10 @@ class ProcessTweet ():
     CONST_QUOTE_VALUE = 1
     CONST_REPLY_VALUE = 0.5
     
-    def __init__ (self, dataBase):
+    def __init__ (self, dataBase, graph):
         self.db = dataBase
+        self.graph = graph
+        self.nodes2Update = {}
        
     def defineType (self, tweet):
         if ProcessTweet.CONST_RT in tweet:
@@ -100,6 +102,10 @@ class ProcessTweet ():
 
         for t in reversed(tweets):
             self.auxProcess(t)
+
+        if len(self.nodes2Update) > 0:
+            self.graph.bulkUpdate(list(self.nodes2Update.values()))
+            self.nodes2Update.clear()
     
     def auxProcess (self, tweetInfo):
         if tweetInfo["type"] == "RT":
@@ -111,6 +117,7 @@ class ProcessTweet ():
 
     def processRT (self, tweet):
         toTweetId = tweet[ProcessTweet.CONST_RT][ProcessTweet.CONST_ID]
+        tweetId = tweet[ProcessTweet.CONST_RT][ProcessTweet.CONST_ID]
         userId = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_ID]
         date = tweet[ProcessTweet.CONST_CREATED_AT]
         if self.exist(tweet[ProcessTweet.CONST_ID], userId, toTweetId, 'RT', date) == False:
@@ -120,6 +127,8 @@ class ProcessTweet ():
                 updateFields.append({"field":CONST_VISIBILITY_VALUE, "value":value, "type":"+"})
                 updateFields.append({"field":CONST_VISIBILITY_COUNT_RT, "value":1, "type":"+"})
                 self.db.update_oneV2(1, CONST_TWEET_ID, toTweetId, updateClearTweetsV2(updateFields))
+                self.graph.insertTweetAndRelation(toTweetId, tweetId, "RT")
+                self.updateParentGraph(tweetId, ProcessTweet.CONST_RT_VALUE)
 
 
     def exist (self, tweetId, userId, toTweetId, type_str, date, insert=True):
@@ -145,7 +154,11 @@ class ProcessTweet ():
             replyId = tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID]
             type_str += ";RP"
 
-        if self.exist(tweetId, None, None, None, type_str, date) == False: 
+        if self.exist(tweetId, None, None, None, type_str, date) == False:
+            if quoteId != None:
+                self.graph.insertTweetAndRelation(quoteId, tweetId, "QT")
+                self.updateParentGraph(tweetId, ProcessTweet.CONST_QT_VALUE)
+
             if quoteId != None and replyId != None and quoteId != replyId:
                 value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_REPLY_VALUE
                 updateFieldsQuote.append({"field":CONST_VISIBILITY_VALUE, "value":value, "type":"+"})
@@ -181,6 +194,9 @@ class ProcessTweet ():
             self.db.insert_one(1, getInsertClearTweet(tweet, isQuote, isReply, self))
             if isReply:
                 self.db.insert_one(2, getInsertHistory(tweetId, userId, tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID], "RP", tweet[ProcessTweet.CONST_CREATED_AT]))
+                self.insertNormalReplyNodeGraph (tweetId, tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID])
+            else:
+                self.insertNormalNodeGraph(tweetId)
         else:
             #print ("update process")
             updateFields = []
@@ -224,4 +240,40 @@ class ProcessTweet ():
         
         return auxTweet
 
+    def updateParentGraph (self, sourceId, valueToAdd):
+        data = list(self.graph.searchTweet(sourceId).records())
+        if (len(data) > 0):
+            source = data[0]["tweet"]
+            level = source.get("level")
+            data = list(db.getPath(sourceId).records())
+            size = len(data)
+            for i in range(size):
+                node = data[i]["tweet"]
+                if not node.get("id") in self.nodes2Update:
+                    self.nodes2Update[node.get("id")] = {"id":node.get("id"), "visibility":node.get("visibility")}
+            
+                self.nodes2Update[node.get("id")]["visibility"] += (valueToAdd / (level - node.get("level")))
+
+    def insertNormalNodeGraph (self, tweetId):
+         data = list(self.graph.searchTweet(tweetId).records())
+            if (len(data) > 0):
+                source = data[0]["tweet"]
+                self.graph.updateHead(None, source.get("id"), "Normal")
+            else:
+                self.graph.insertTweet({"id":tweetId, "visibility":0, "level":0, "type":"Normal", "parentId":None})
+
+    def insertNormalReplyNodeGraph (self, tweetId, replyId):
+        data = list(self.graph.searchTweet(replyId).records())
+        if (len(data) > 0):
+            source = data[0]["tweet"]
+            self.graph.insertTweetAndRelation(replyId, tweetId, "RP")
+            self.updateParentGraph(tweetId, ProcessTweet.CONST_REPLY_VALUE)
+
+        else:
+             self.graph.insertTweet({"id":replyId, "visibility":0, "level":0, "type":"Unknow", "parentId":None})
+             self.graph.insertTweet({"id":tweetId, "visibility":0, "level":0, "type":"RP", "parentId":replyId})
+             self.graph.insertRelation(replyId, tweetId)
+             self.graph.addOneLevel(replyId)
+             self.updateParentGraph(tweetId, ProcessTweet.CONST_REPLY_VALUE)
+             #parent doesn't have visibility and he should have it
     

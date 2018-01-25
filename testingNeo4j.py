@@ -32,7 +32,7 @@ db.upsertTweet("1", 2)
 db.upsertTweet("1", 1)"""
 
 
-db.insertTweet({"id":"1", "visibility":0, "level":0, "type":"normal"})
+db.insertTweet({"id":"1", "visibility":0, "level":0, "type":"Unknow", "parentId":None})
 
 db.insertTweetAndRelation("1", "2", "QT")
 db.insertTweetAndRelation("1", "3", "RP")
@@ -46,7 +46,13 @@ db.insertTweetAndRelation("5", "8", "QT")
 db.insertTweetAndRelation("5", "9", "RP")
 db.insertTweetAndRelation("5", "10", "RT")
 
+db.insertTweet({"id":"0", "visibility":0, "level":0, "type":"normal", "parentId":None})
+db.updateHead("0", "1", "RP")
+db.insertRelation("0", "1")
+db.addOneLevel("0")
 
+
+"""
 tweetId = "9"
 data = list(db.searchTweet(tweetId).records())
 data2Update = {}
@@ -64,7 +70,7 @@ if (len(data) > 0):
         data2Update[node.get("id")]["visibility"] += (value / (level - node.get("level")))
 
 db.bulkUpdate(list(data2Update.values()))
-
+"""
 db.connect2Neo4J.closeDB()
 """
 tweetId = "4"

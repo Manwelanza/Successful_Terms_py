@@ -51,6 +51,19 @@ class Neo4jDB():
         else:
             return False
 
+    def updateHead (self, parentId, tweetId, relType):
+        query = """
+        MATCH (t:Tweet {id:$id})
+        USING INDEX t:Tweet(id) 
+        SET t.type = $relType, t.level = 0, t.parentId = $parentId
+        """
+        db = self.connect2Neo4J.getDB()
+        if db != None:
+            db.run(query, id=tweetId, relType=relType, parentId=parentId)
+            return True
+        else:
+            return False
+
     def insertRelation (self, parentId, childId):
         query = "MATCH (t1:Tweet {id:$id1}), (t2:Tweet {id:$id2}) CREATE (t1)-[r:RELTYPE]->(t2)"
         db = self.connect2Neo4J.getDB()
@@ -79,6 +92,19 @@ class Neo4jDB():
         db = self.connect2Neo4J.getDB()
         if db != None:
             db.run(query, rows=dataList)
+            return True
+        else:
+            return False
+    
+    def addOneLevel (self, sourceId):
+        query = """
+            MATCH (t:Tweet {id:$id})<-[r:RELTYPE *..]-(t2:Tweet)
+            USING INDEX t:Tweet(id) 
+            SET t2.level = t2.level + 1
+        """
+        db = self.connect2Neo4J.getDB()
+        if db != None:
+            db.run(query, id=sourceId)
             return True
         else:
             return False
