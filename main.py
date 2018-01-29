@@ -1,5 +1,6 @@
 #  -*- coding: utf-8 -*-
 import sys
+import datetime
 from MongoDBConnect import *
 from MongoDB import *
 from queries import *
@@ -9,6 +10,8 @@ from Neo4JDB import *
 from credentials import *
 
 if __name__ == "__main__":
+    print ("Start: {0}".format(datetime.datetime.now()))
+   
     connectMongoDB = Connect2MongoDB('localhost', 27017)
     connectMongoDB.setDB('test1') 
     db = MongoDB(connectMongoDB)
@@ -26,3 +29,5 @@ if __name__ == "__main__":
 
 
     graph.connect2Neo4J.closeDB()
+
+    print ("Stop: {0}".format(datetime.datetime.now()))

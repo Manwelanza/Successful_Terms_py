@@ -42,6 +42,14 @@ class Neo4jDB():
         else:
             return None
 
+    def getChilds (self, sourceId):
+        query = "MATCH (t1:Tweet {id:$id})<-[r:RELTYPE *..]-(t2:Tweet) RETURN t2 as tweet ORDER BY t2.level ASC"
+        db = self.connect2Neo4J.getDB()
+        if db != None:
+            return db.run(query, id=sourceId)
+        else:
+            return None
+
     def insertTweet (self, dataToInsert):
         query = "CREATE (t:Tweet $data)"
         db = self.connect2Neo4J.getDB()

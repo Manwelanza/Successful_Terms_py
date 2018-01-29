@@ -117,7 +117,7 @@ class ProcessTweet ():
 
     def processRT (self, tweet):
         toTweetId = tweet[ProcessTweet.CONST_RT][ProcessTweet.CONST_ID]
-        tweetId = tweet[ProcessTweet.CONST_RT][ProcessTweet.CONST_ID]
+        tweetId = tweet[ProcessTweet.CONST_ID]
         userId = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_ID]
         date = tweet[ProcessTweet.CONST_CREATED_AT]
         if self.exist(tweet[ProcessTweet.CONST_ID], userId, toTweetId, 'RT', date) == False:
@@ -132,6 +132,8 @@ class ProcessTweet ():
 
 
     def exist (self, tweetId, userId, toTweetId, type_str, date, insert=True):
+        #Change this query to search history. It could be wrong, it should search by userId, toTweetId and type_str
+        #Then if it exists, it should check tweetId. 
         history = self.db.find(2, getHistory(tweetId, userId, toTweetId, type_str))
         if history.count() == 0:
             if insert:
@@ -152,12 +154,12 @@ class ProcessTweet ():
         type_str = "QT"
         if isReply:
             replyId = tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID]
-            type_str += ";RP"
+            #type_str += ";RP"
 
-        if self.exist(tweetId, None, None, None, type_str, date) == False:
+        if self.exist(tweetId, userId, quoteId, type_str, date) == False:
             if quoteId != None:
                 self.graph.insertTweetAndRelation(quoteId, tweetId, "QT")
-                self.updateParentGraph(tweetId, ProcessTweet.CONST_QT_VALUE)
+                self.updateParentGraph(tweetId, ProcessTweet.CONST_QUOTE_VALUE)
 
             if quoteId != None and replyId != None and quoteId != replyId:
                 value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_REPLY_VALUE
@@ -183,7 +185,7 @@ class ProcessTweet ():
                 self.db.update_oneV2(1, CONST_TWEET_ID, quoteId, updateClearTweetsV2(updateFieldsQuote))
 
         
-            self.processNormal(tweet, False, True)
+            self.processNormal(tweet, isReply, True)
        
 
     def processNormal (self, tweet, isReply, isQuote):
@@ -194,9 +196,11 @@ class ProcessTweet ():
             self.db.insert_one(1, getInsertClearTweet(tweet, isQuote, isReply, self))
             if isReply:
                 self.db.insert_one(2, getInsertHistory(tweetId, userId, tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID], "RP", tweet[ProcessTweet.CONST_CREATED_AT]))
-                self.insertNormalReplyNodeGraph (tweetId, tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID])
+                if isQuote == False:
+                    self.insertNormalReplyNodeGraph (tweetId, tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID])
             else:
-                self.insertNormalNodeGraph(tweetId)
+                if isQuote == False:
+                    self.insertNormalNodeGraph(tweetId)
         else:
             #print ("update process")
             updateFields = []
@@ -245,24 +249,26 @@ class ProcessTweet ():
         if (len(data) > 0):
             source = data[0]["tweet"]
             level = source.get("level")
-            data = list(db.getPath(sourceId).records())
+            data = list(self.graph.getPath(sourceId).records())
             size = len(data)
             for i in range(size):
                 node = data[i]["tweet"]
                 if not node.get("id") in self.nodes2Update:
                     self.nodes2Update[node.get("id")] = {"id":node.get("id"), "visibility":node.get("visibility")}
             
+                #print ("Node {0} -- level {1}".format(node.get("id"), node.get("level")))
                 self.nodes2Update[node.get("id")]["visibility"] += (valueToAdd / (level - node.get("level")))
 
     def insertNormalNodeGraph (self, tweetId):
-         data = list(self.graph.searchTweet(tweetId).records())
-            if (len(data) > 0):
-                source = data[0]["tweet"]
-                self.graph.updateHead(None, source.get("id"), "Normal")
-            else:
-                self.graph.insertTweet({"id":tweetId, "visibility":0, "level":0, "type":"Normal", "parentId":None})
+        data = list(self.graph.searchTweet(tweetId).records())
+        if len(data) > 0:
+            source = data[0]["tweet"]
+            self.graph.updateHead(None, source.get("id"), "Normal")
+        else:
+            self.graph.insertTweet({"id":tweetId, "visibility":0, "level":0, "type":"Normal", "parentId":None})
 
     def insertNormalReplyNodeGraph (self, tweetId, replyId):
+        #print ("tweetId: {0} -- replyId: {1}".format(tweetId, replyId))
         data = list(self.graph.searchTweet(replyId).records())
         if (len(data) > 0):
             source = data[0]["tweet"]
@@ -270,10 +276,33 @@ class ProcessTweet ():
             self.updateParentGraph(tweetId, ProcessTweet.CONST_REPLY_VALUE)
 
         else:
-             self.graph.insertTweet({"id":replyId, "visibility":0, "level":0, "type":"Unknow", "parentId":None})
-             self.graph.insertTweet({"id":tweetId, "visibility":0, "level":0, "type":"RP", "parentId":replyId})
-             self.graph.insertRelation(replyId, tweetId)
-             self.graph.addOneLevel(replyId)
-             self.updateParentGraph(tweetId, ProcessTweet.CONST_REPLY_VALUE)
-             #parent doesn't have visibility and he should have it
+            print ("ID: {0}".format(replyId))
+            data = list(self.graph.searchTweet(tweetId).records())
+            if len(data) > 0:
+                print ("tweetId exist --  value: {0}".format(data[0]["tweet"].get("visibility")))
+
+            self.graph.insertTweet({"id":replyId, "visibility":0, "level":0, "type":"Unknow", "parentId":None})
+            self.graph.insertTweet({"id":tweetId, "visibility":0, "level":0, "type":"RP", "parentId":replyId})
+            self.graph.insertRelation(replyId, tweetId)
+            self.graph.addOneLevel(replyId)
+            self.updateParentGraph(tweetId, ProcessTweet.CONST_REPLY_VALUE)
+            #parent doesn't have visibility and he should have it
+            data = list(self.graph.getChilds(replyId).records())
+            newValue = 0
+            for i in range(len(data)):
+                node = data[i]["tweet"]
+                nodeType = node.get("type")
+                value = 0
+                if nodeType == "RP":
+                    value = ProcessTweet.CONST_REPLY_VALUE
+                elif nodeType == "QT":
+                    value = ProcessTweet.CONST_QUOTE_VALUE
+                elif nodeType == "RT":
+                    value = ProcessTweet.CONST_RT_VALUE
+
+                newValue += (value / node.get("level"))
+            
+            self.graph.bulkUpdate([{"id":replyId, "visibility":newValue}])
+                
+
     
