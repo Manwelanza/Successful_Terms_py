@@ -191,6 +191,7 @@ class ProcessTweet ():
     def processNormal (self, tweet, isReply, isQuote):
         tweetId = tweet[ProcessTweet.CONST_ID]
         userId = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_ID]
+
         clearTweets = self.db.find(1, getTweet ("tweetId", tweetId))
         if clearTweets.count() == 0:
             self.db.insert_one(1, getInsertClearTweet(tweet, isQuote, isReply, self))
@@ -254,7 +255,7 @@ class ProcessTweet ():
             for i in range(size):
                 node = data[i]["tweet"]
                 if not node.get("id") in self.nodes2Update:
-                    self.nodes2Update[node.get("id")] = {"id":node.get("id"), "visibility":node.get("visibility")}
+                    self.nodes2Update[node.get("id")] = {"id":node.get("id"), "visibility":0}
             
                 #print ("Node {0} -- level {1}".format(node.get("id"), node.get("level")))
                 self.nodes2Update[node.get("id")]["visibility"] += (valueToAdd / (level - node.get("level")))
@@ -276,17 +277,11 @@ class ProcessTweet ():
             self.updateParentGraph(tweetId, ProcessTweet.CONST_REPLY_VALUE)
 
         else:
-            print ("ID: {0}".format(replyId))
-            data = list(self.graph.searchTweet(tweetId).records())
-            if len(data) > 0:
-                print ("tweetId exist --  value: {0}".format(data[0]["tweet"].get("visibility")))
-
             self.graph.insertTweet({"id":replyId, "visibility":0, "level":0, "type":"Unknow", "parentId":None})
             self.graph.insertTweet({"id":tweetId, "visibility":0, "level":0, "type":"RP", "parentId":replyId})
             self.graph.insertRelation(replyId, tweetId)
             self.graph.addOneLevel(replyId)
-            self.updateParentGraph(tweetId, ProcessTweet.CONST_REPLY_VALUE)
-            #parent doesn't have visibility and he should have it
+            #self.updateParentGraph(tweetId, ProcessTweet.CONST_REPLY_VALUE)
             data = list(self.graph.getChilds(replyId).records())
             newValue = 0
             for i in range(len(data)):
