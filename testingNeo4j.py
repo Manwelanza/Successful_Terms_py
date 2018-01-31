@@ -25,13 +25,19 @@ with driver.session() as session:
 """
 
 db = Neo4jDB (Connect2Neo4J (CONST_NEO4J_URI, CONST_NEO4J_USER, CONST_NEO4J_PASSWORD))
+
+db.upsert(None, "1")
+db.upsert(None, "1")
+db.upsertTypeAndRelation("1", "2", "RT")
+db.upsertTypeAndRelation("1", "2", "QT")
+
 """db.upsertTweet("1", 0)
 db.upsertTweet("2", 0)
 db.upsertTweet("3", 5)
 db.upsertTweet("1", 2)
 db.upsertTweet("1", 1)"""
 
-
+"""
 db.insertTweet({"id":"1", "visibility":0, "level":0, "type":"Unknow", "parentId":None})
 
 db.insertTweetAndRelation("1", "2", "QT")
@@ -45,7 +51,7 @@ db.insertTweetAndRelation("3", "7", "RT")
 db.insertTweetAndRelation("5", "8", "QT")
 db.insertTweetAndRelation("5", "9", "RP")
 db.insertTweetAndRelation("5", "10", "RT")
-
+"""
 """
 tweetId = "9"
 data = list(db.searchTweet(tweetId).records())
@@ -65,7 +71,7 @@ if (len(data) > 0):
 
 db.bulkUpdate(list(data2Update.values()))
 """
-
+"""
 db.insertTweet({"id":"0", "visibility":0, "level":0, "type":"normal", "parentId":None})
 db.updateHead("0", "1", "RP")
 db.insertRelation("0", "1")
@@ -86,7 +92,7 @@ for i in range(size):
     else:
         newValue += (0.5 / node.get("level"))
 
-db.bulkUpdate([{"id":tweetId, "visibility":newValue}])
+db.bulkUpdate([{"id":tweetId, "visibility":newValue}])"""
 
 db.connect2Neo4J.closeDB()
 """

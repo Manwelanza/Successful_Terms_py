@@ -128,7 +128,7 @@ class ProcessTweet ():
                 updateFields.append({"field":CONST_VISIBILITY_COUNT_RT, "value":1, "type":"+"})
                 self.db.update_oneV2(1, CONST_TWEET_ID, toTweetId, updateClearTweetsV2(updateFields))
                 self.graph.insertTweetAndRelation(toTweetId, tweetId, "RT")
-                self.updateParentGraph(tweetId, ProcessTweet.CONST_RT_VALUE)
+                #self.updateParentGraph(tweetId, ProcessTweet.CONST_RT_VALUE)
 
 
     def exist (self, tweetId, userId, toTweetId, type_str, date, insert=True):
@@ -151,15 +151,14 @@ class ProcessTweet ():
         replyId = None
         updateFieldsQuote=[]
         updateFieldsReply=[]
-        type_str = "QT"
         if isReply:
             replyId = tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID]
-            #type_str += ";RP"
+            self.exist(tweetId, userId, quoteId, "RP", date)
 
-        if self.exist(tweetId, userId, quoteId, type_str, date) == False:
+        if self.exist(tweetId, userId, quoteId, "QT", date) == False:
             if quoteId != None:
-                self.graph.insertTweetAndRelation(quoteId, tweetId, "QT")
-                self.updateParentGraph(tweetId, ProcessTweet.CONST_QUOTE_VALUE)
+                self.graph.upsertTypeAndRelation(quoteId, tweetId, "QT")
+                #self.updateParentGraph(tweetId, ProcessTweet.CONST_QUOTE_VALUE)
 
             if quoteId != None and replyId != None and quoteId != replyId:
                 value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_REPLY_VALUE
@@ -169,6 +168,7 @@ class ProcessTweet ():
                 updateFieldsReply.append({"field":CONST_VISIBILITY_COUNT_REPLY, "value":1, "type":"+"})
                 self.db.update_oneV2(1, CONST_TWEET_ID, quoteId, updateClearTweetsV2(updateFieldsQuote))
                 self.db.update_oneV2(1, CONST_TWEET_ID, replyId, updateClearTweetsV2(updateFieldsReply))
+                print ("QT: {0}\n RP: {1}".format(quoteId, replyId))
                 #TODO: Change to bulk
 
             elif quoteId != None and replyId != None and quoteId == replyId:
@@ -177,6 +177,7 @@ class ProcessTweet ():
                 updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_QUOTE, "value":1, "type":"+"})
                 updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_REPLY, "value":1, "type":"+"})
                 self.db.update_oneV2(1, CONST_TWEET_ID, quoteId, updateClearTweetsV2(updateFieldsQuote))
+                print("QT and RT same toTweetId {0}".format(quoteId))
 
             elif quoteId != None and replyId == None:
                 value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_QUOTE_VALUE
@@ -197,11 +198,10 @@ class ProcessTweet ():
             self.db.insert_one(1, getInsertClearTweet(tweet, isQuote, isReply, self))
             if isReply:
                 self.db.insert_one(2, getInsertHistory(tweetId, userId, tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID], "RP", tweet[ProcessTweet.CONST_CREATED_AT]))
-                if isQuote == False:
-                    self.insertNormalReplyNodeGraph (tweetId, tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID])
+                self.insertNormalReplyNodeGraph (tweetId, tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID])
             else:
                 if isQuote == False:
-                    self.insertNormalNodeGraph(tweetId)
+                    self.graph.upsert(None, tweetId)
         else:
             #print ("update process")
             updateFields = []
@@ -260,44 +260,12 @@ class ProcessTweet ():
                 #print ("Node {0} -- level {1}".format(node.get("id"), node.get("level")))
                 self.nodes2Update[node.get("id")]["visibility"] += (valueToAdd / (level - node.get("level")))
 
-    def insertNormalNodeGraph (self, tweetId):
-        data = list(self.graph.searchTweet(tweetId).records())
-        if len(data) > 0:
-            source = data[0]["tweet"]
-            self.graph.updateHead(None, source.get("id"), "Normal")
-        else:
-            self.graph.insertTweet({"id":tweetId, "visibility":0, "level":0, "type":"Normal", "parentId":None})
-
     def insertNormalReplyNodeGraph (self, tweetId, replyId):
-        #print ("tweetId: {0} -- replyId: {1}".format(tweetId, replyId))
-        data = list(self.graph.searchTweet(replyId).records())
-        if (len(data) > 0):
-            source = data[0]["tweet"]
-            self.graph.insertTweetAndRelation(replyId, tweetId, "RP")
-            self.updateParentGraph(tweetId, ProcessTweet.CONST_REPLY_VALUE)
-
-        else:
-            self.graph.insertTweet({"id":replyId, "visibility":0, "level":0, "type":"Unknow", "parentId":None})
-            self.graph.insertTweet({"id":tweetId, "visibility":0, "level":0, "type":"RP", "parentId":replyId})
-            self.graph.insertRelation(replyId, tweetId)
-            self.graph.addOneLevel(replyId)
-            #self.updateParentGraph(tweetId, ProcessTweet.CONST_REPLY_VALUE)
-            data = list(self.graph.getChilds(replyId).records())
-            newValue = 0
-            for i in range(len(data)):
-                node = data[i]["tweet"]
-                nodeType = node.get("type")
-                value = 0
-                if nodeType == "RP":
-                    value = ProcessTweet.CONST_REPLY_VALUE
-                elif nodeType == "QT":
-                    value = ProcessTweet.CONST_QUOTE_VALUE
-                elif nodeType == "RT":
-                    value = ProcessTweet.CONST_RT_VALUE
-
-                newValue += (value / node.get("level"))
-            
-            self.graph.bulkUpdate([{"id":replyId, "visibility":newValue}])
+        clearTweets = self.db.find(1, getTweet ("tweetId", replyId))
+        if clearTweets.count() == 0:
+            self.graph.upsert(None, replyId)
+        
+        self.graph.upsertTypeAndRelation(replyId, tweetId, "RP")
                 
 
     

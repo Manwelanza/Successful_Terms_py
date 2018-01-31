@@ -10,6 +10,15 @@ class Neo4jDB():
         else:
             return None
 
+
+    def upsert (self, parentId, tweetId):
+        query = "MERGE (t:Tweet {id:$id}) ON CREATE SET t = {id:$id, parentId:$parent, visibility:0}"
+        db = self.connect2Neo4J.getDB()
+        if db != None:
+            return db.run(query, id=tweetId, parent=parentId)
+        else:
+            return None
+
     def upsertTweet (self, tweetId, value):
         """
         query = "MERGE (t:Tweet {value: '" + tweetId + "'}) "
@@ -25,6 +34,24 @@ class Neo4jDB():
             return db.run(query, id=tweetId, visivility=value)
         else:
             return None
+
+    def upsertTypeAndRelation (self,parentId, tweetId, reltype):
+        query = """
+            MATCH (t2: Tweet {id:$parent})
+            USING INDEX t2:Tweet(id) 
+            MERGE (t:Tweet {id:$id})
+            ON CREATE SET t = {id:$id, parentId:$parent, visibility:0}
+            MERGE (t2)<-[r:RELTYPE]-(t)
+            ON CREATE SET r = {type:$relType}
+            ON MATCH SET r = {type:$relType}
+        """
+
+        db = self.connect2Neo4J.getDB()
+        if db != None:
+            return db.run(query, id=tweetId, parent = parentId, relType = reltype)
+        else:
+            return None
+
 
     def searchTweet (self, tweetId):
         query = "MATCH (t:Tweet {id:$id}) RETURN t as tweet"
@@ -82,7 +109,7 @@ class Neo4jDB():
             return False
     
     def insertTweetAndRelation (self, parentId, childId, relType):
-        query = "MATCH (t1:Tweet {id:$parentId}) CREATE (t2:Tweet {id:$childId, visibility:0, level:t1.level+1, parentId:t1.id, type:$relType})-[r:RELTYPE]->(t1)"
+        query = "MATCH (t1:Tweet {id:$parentId}) CREATE (t2:Tweet {id:$childId, visibility:0, parentId:t1.id})-[r:RELTYPE {type:$relType}]->(t1)"
         db = self.connect2Neo4J.getDB()
         if db != None:
             db.run(query, parentId=parentId, childId=childId, relType=relType)
