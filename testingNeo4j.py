@@ -26,10 +26,45 @@ with driver.session() as session:
 
 db = Neo4jDB (Connect2Neo4J (CONST_NEO4J_URI, CONST_NEO4J_USER, CONST_NEO4J_PASSWORD))
 
+"""
 db.upsert(None, "1")
 db.upsert(None, "1")
 db.upsertTypeAndRelation("1", "2", "RT")
 db.upsertTypeAndRelation("1", "2", "QT")
+"""
+
+db.upsert(True, "1")
+db.upsertTypeAndRelation("1", "2", "QT")
+db.upsertTypeAndRelation("1", "2", "QT")
+db.upsertTypeAndRelation("1", "3", "RP")
+db.upsertTypeAndRelation("3", "4", "RP")
+db.upsertTypeAndRelation("2", "4", "QT")
+
+tweetMap = {}
+
+data = list(db.getGraphs.records())
+for i in range(len(data)):
+    item = data[i]
+    rootId = item["rootId"]
+    node = item["child"]
+    relation = item["relation"]
+
+    parentId = relation.get("parentId")
+    
+    if (tweetMap[rootId] == None):
+        tweetMap[rootId] = {}
+    
+    if tweetMap[rootId][parentId] == None:
+        tweetMap[rootId][parentId] = []
+
+    tweetMap[rootId][parentId].append({"id":node.get("id"), "visibility":0, "type":relation.get("type")})
+
+#dictionary.pop(key, None) --> delete key
+tweetVisibility = []
+for i in tweetMap.keys():
+
+
+
 
 """db.upsertTweet("1", 0)
 db.upsertTweet("2", 0)

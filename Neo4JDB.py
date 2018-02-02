@@ -11,11 +11,22 @@ class Neo4jDB():
             return None
 
 
-    def upsert (self, parentId, tweetId):
-        query = "MERGE (t:Tweet {id:$id}) ON CREATE SET t = {id:$id, parentId:$parent, visibility:0}"
+    def getGraphs (self):
+        query = """
+            Match (n:Tweet {root:True})<-[r:RELTYPE *..]-(n2:Tweet) 
+            RETURN n.id AS rootId , n2 AS child , r AS relation
+        """
         db = self.connect2Neo4J.getDB()
         if db != None:
-            return db.run(query, id=tweetId, parent=parentId)
+            return db.run(query)
+        else:
+            return None
+
+    def upsert (self, root, tweetId):
+        query = "MERGE (t:Tweet {id:$id}) ON CREATE SET t = {id:$id, root:$root, visibility:0}"
+        db = self.connect2Neo4J.getDB()
+        if db != None:
+            return db.run(query, id=tweetId, root=root)
         else:
             return None
 
@@ -40,15 +51,16 @@ class Neo4jDB():
             MATCH (t2: Tweet {id:$parent})
             USING INDEX t2:Tweet(id) 
             MERGE (t:Tweet {id:$id})
-            ON CREATE SET t = {id:$id, parentId:$parent, visibility:0}
+            ON CREATE SET t = {id:$id, root:$boolean, visibility:0}
+            ON MATCH SET t.root = $boolean
             MERGE (t2)<-[r:RELTYPE]-(t)
-            ON CREATE SET r = {type:$relType}
-            ON MATCH SET r = {type:$relType}
+            ON CREATE SET r = {type:$relType, parentId:$parent}
+            ON MATCH SET r = {type:$relType, parentId:$parent}
         """
 
         db = self.connect2Neo4J.getDB()
         if db != None:
-            return db.run(query, id=tweetId, parent = parentId, relType = reltype)
+            return db.run(query, id=tweetId, parent = parentId, relType = reltype, boolean = False)
         else:
             return None
 

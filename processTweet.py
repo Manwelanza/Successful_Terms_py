@@ -127,7 +127,7 @@ class ProcessTweet ():
                 updateFields.append({"field":CONST_VISIBILITY_VALUE, "value":value, "type":"+"})
                 updateFields.append({"field":CONST_VISIBILITY_COUNT_RT, "value":1, "type":"+"})
                 self.db.update_oneV2(1, CONST_TWEET_ID, toTweetId, updateClearTweetsV2(updateFields))
-                self.graph.insertTweetAndRelation(toTweetId, tweetId, "RT")
+                self.graph.upsertTypeAndRelation(toTweetId, tweetId, "RT")
                 #self.updateParentGraph(tweetId, ProcessTweet.CONST_RT_VALUE)
 
 
@@ -201,7 +201,7 @@ class ProcessTweet ():
                 self.insertNormalReplyNodeGraph (tweetId, tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID])
             else:
                 if isQuote == False:
-                    self.graph.upsert(None, tweetId)
+                    self.graph.upsert(True, tweetId)
         else:
             #print ("update process")
             updateFields = []
@@ -263,7 +263,7 @@ class ProcessTweet ():
     def insertNormalReplyNodeGraph (self, tweetId, replyId):
         clearTweets = self.db.find(1, getTweet ("tweetId", replyId))
         if clearTweets.count() == 0:
-            self.graph.upsert(None, replyId)
+            self.graph.upsert(True, replyId)
         
         self.graph.upsertTypeAndRelation(replyId, tweetId, "RP")
                 
