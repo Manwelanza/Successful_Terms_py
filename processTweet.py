@@ -168,7 +168,7 @@ class ProcessTweet ():
                 updateFieldsReply.append({"field":CONST_VISIBILITY_COUNT_REPLY, "value":1, "type":"+"})
                 self.db.update_oneV2(1, CONST_TWEET_ID, quoteId, updateClearTweetsV2(updateFieldsQuote))
                 self.db.update_oneV2(1, CONST_TWEET_ID, replyId, updateClearTweetsV2(updateFieldsReply))
-                print ("QT: {0}\n RP: {1}".format(quoteId, replyId))
+                #print ("QT: {0}\n RP: {1}".format(quoteId, replyId))
                 #TODO: Change to bulk
 
             elif quoteId != None and replyId != None and quoteId == replyId:
@@ -177,7 +177,7 @@ class ProcessTweet ():
                 updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_QUOTE, "value":1, "type":"+"})
                 updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_REPLY, "value":1, "type":"+"})
                 self.db.update_oneV2(1, CONST_TWEET_ID, quoteId, updateClearTweetsV2(updateFieldsQuote))
-                print("QT and RT same toTweetId {0}".format(quoteId))
+                #print("QT and RT same toTweetId {0}".format(quoteId))
 
             elif quoteId != None and replyId == None:
                 value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_QUOTE_VALUE
@@ -230,6 +230,9 @@ class ProcessTweet ():
         rtCount = tweet[ProcessTweet.CONST_RT_COUNT]
         replyCount = tweet[ProcessTweet.CONST_REPLY_COUNT]
         quoteCount = tweet[ProcessTweet.CONST_QUOTE_COUNT]
+
+        if followersCount <= 0:
+            followersCount = 1
 
         valueRT = ProcessTweet.CONST_RT_VALUE * (rtCount / followersCount)
         valueReply = ProcessTweet.CONST_REPLY_VALUE * (replyCount / followersCount)

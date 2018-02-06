@@ -2,6 +2,25 @@ from credentials import *
 from Neo4JDBConnect import *
 from Neo4JDB import *
 
+def calculeVisibility (nodeId, nodeDict):
+    if not nodeId in nodeDict:
+        return 0
+    else:
+        value = 0
+        for key in nodeDict[nodeId].keys():
+            relationType = nodeDict[nodeId][key]["type"]
+            if relationType == "QT":
+                value += 1
+            elif relationType == "RT":
+                value += 1
+            elif relationType == "RP":
+                value += 0.5
+            
+            nodeDict[nodeId][key]["visibility"] = calculeVisibility(nodeDict[nodeId][key]["id"], nodeDict)
+            value += (nodeDict[nodeId][key]["visibility"] / 2)
+
+        return value
+
 """from neo4j.v1 import GraphDatabase
 
 
@@ -32,7 +51,7 @@ db.upsert(None, "1")
 db.upsertTypeAndRelation("1", "2", "RT")
 db.upsertTypeAndRelation("1", "2", "QT")
 """
-
+"""
 db.upsert(True, "1")
 db.upsertTypeAndRelation("1", "2", "QT")
 db.upsertTypeAndRelation("1", "2", "QT")
@@ -40,28 +59,47 @@ db.upsertTypeAndRelation("1", "3", "RP")
 db.upsertTypeAndRelation("3", "4", "RP")
 db.upsertTypeAndRelation("2", "4", "QT")
 
-tweetMap = {}
+db.upsert(True, "1B")
+db.upsertTypeAndRelation("1B", "2B", "QT")
+db.upsertTypeAndRelation("1B", "2B", "QT")
+db.upsertTypeAndRelation("1B", "3B", "RP")
+db.upsertTypeAndRelation("3B", "4B", "RP")
+db.upsertTypeAndRelation("2B", "4B", "QT")
 
-data = list(db.getGraphs.records())
+db.upsertTypeAndRelation("4", "5", "QT")
+db.upsertTypeAndRelation("4B", "5", "RP")
+"""
+tweetMap = dict()
+
+data = list(db.getGraphs().records())
 for i in range(len(data)):
     item = data[i]
     rootId = item["rootId"]
     node = item["child"]
-    relation = item["relation"]
+    relation = item["relation"][-1]
 
     parentId = relation.get("parentId")
-    
-    if (tweetMap[rootId] == None):
+    if not rootId in tweetMap:
         tweetMap[rootId] = {}
     
-    if tweetMap[rootId][parentId] == None:
-        tweetMap[rootId][parentId] = []
+    if not parentId in tweetMap[rootId]:
+        tweetMap[rootId][parentId] = {}
 
-    tweetMap[rootId][parentId].append({"id":node.get("id"), "visibility":0, "type":relation.get("type")})
+    if not relation.get("type") + node.get("id") in tweetMap[rootId][parentId]:
+        tweetMap[rootId][parentId][relation.get("type") + node.get("id")] = {"id":node.get("id"), "visibility":0, "type":relation.get("type")}
 
 #dictionary.pop(key, None) --> delete key
-tweetVisibility = []
+tweetVisibility = dict()
 for i in tweetMap.keys():
+    tweetVisibility[i] = {"id":i, "visibility":calculeVisibility (i, tweetMap[i])}
+    for j in tweetMap[i].keys():
+        for k in tweetMap[i][j].keys():
+            id = tweetMap[i][j][k]["id"]
+            if not id in tweetVisibility:
+                tweetVisibility[id] = {"id":id, "visibility": tweetMap[i][j][k]["visibility"]}
+
+db.bulkUpdate(list(tweetVisibility.values()))
+
 
 
 
@@ -148,16 +186,5 @@ else:
 
 
 """
-Ideas para el grafo:
-    * Si es normalTweet consultar si existe y traer id_str y profundidad de su padre y de los padres de los padres
-        * Si no existe insertar con profundidad 0 (siempre se mira primero la base)
-        * Si existe 
-            * Si no es reply, ni quote no hacer nada
-            * Si es reply, perlo no quote actualizar padre en cadena hacia arriba
-            * Si es reply y quote no hacer nada (ya se habra hecho en el procesamiento de quote)
-    * Si es RT actualizar su padre y padre de su padre
-    * Si es quote (sea reply o no) actualizar padre y padre de padres y llamar a normalTweet para almacenar el tweet 
-
-
 CREATE INDEX ON :Tweet(id)
 """
