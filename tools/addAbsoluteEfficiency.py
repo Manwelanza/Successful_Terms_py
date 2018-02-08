@@ -31,4 +31,6 @@ if __name__ == "__main__":
     for i in range (0, len(ids)):
         bulk.find( { '_id':  ids[i]}).update({ '$set': {  "isBad" : "N" }})
     print bulk.execute()
+
+    db.test.update({"a":5},{$set:{"e":2}}, false, false)
     """

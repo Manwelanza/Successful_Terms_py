@@ -12,6 +12,7 @@ CONST_VISIBILITY_COUNT_RT = "visibility_count_RT"
 CONST_VISIBILITY_COUNT_QUOTE = "visibility_count_quote"
 CONST_VISIBILITY_COUNT_REPLY = "visibility_count_reply"
 CONST_RATIO_SUCCESS = "RS"
+CONST_RATIO_SUCCESS_ABSOLUTE = "RSA"
 
 CONST_USER_ID = "userId"
 CONST_TYPE = "type"
@@ -34,13 +35,14 @@ def getInsertClearTweet (tweet, isQuote, isReply, processTweet):
 
     clearTweet = {}
     clearTweet[CONST_TWEET_ID] = tweet[processTweet.CONST_ID]
-    clearTweet[CONST_VISIBILITY_VALUE] = 0
+    clearTweet[CONST_VISIBILITY_VALUE] = tweet[processTweet.CONST_USER][processTweet.CONST_FOLLOWERS_COUNT]
     clearTweet[CONST_VISIBILITY_COUNT_RT] = 0
     clearTweet[CONST_VISIBILITY_COUNT_QUOTE] = 0
     clearTweet[CONST_VISIBILITY_COUNT_REPLY] = 0
     clearTweet[processTweet.CONST_CREATED_AT] = tweet[processTweet.CONST_CREATED_AT]
 
     clearTweet[CONST_RATIO_SUCCESS] = processTweet.getRatioSuccess(tweet)
+    clearTweet[CONST_RATIO_SUCCESS_ABSOLUTE] = processTweet.getRatioSuccessAbsolute(tweet, clearTweet[CONST_VISIBILITY_VALUE])
     
     if isQuote is True:
         clearTweet[CONST_IS_QUOTE] = True

@@ -14,7 +14,7 @@ def getNormalTweets():
             })
 
 def getReplys ():
-    return {"in_reply_to_status_id_str": {"$ne": None}}
+    return {"in_reply_to_status_id": {"$ne": None}}
 
 def getTweet (idLabel, idValue):
     return {idLabel: idValue}

@@ -5,14 +5,14 @@ from updates import *
 class ProcessTweet ():
     CONST_RT = "retweeted_status"
     CONST_QUOTE = "quoted_status"
-    CONST_REPLY = "in_reply_to_status_id_str"
-    CONST_ID = "id_str"
+    CONST_REPLY = "in_reply_to_status_id"
+    CONST_ID = "id"
     CONST_TRUNCATED = "truncated"
     CONST_FULL_TEXT = "full_text"
     CONST_TEXT = "text"
     CONST_EXTENDED_TWEET = "extended_tweet"
-    CONST_REPLY_TO_STATUS_ID = "in_reply_to_status_id_str"
-    CONST_QUOTE_TO_STATUS_ID = "quoted_status_id_str"
+    CONST_REPLY_TO_STATUS_ID = "in_reply_to_status_id"
+    CONST_QUOTE_TO_STATUS_ID = "quoted_status_id"
     CONST_QUOTE_STATUS = "is_quote_status"
     CONST_ENTITIES = "entities"
     CONST_DISPLAY_TEXT_RANGE = "display_text_range"
@@ -113,7 +113,7 @@ class ProcessTweet ():
         elif tweetInfo["type"] == "quote":
             self.processQuote(tweetInfo["tweet"], tweetInfo["isReply"])
         else:
-            self.processNormal(tweetInfo["tweet"], tweetInfo["isReply"], False)
+            self.processNormal(tweetInfo["tweet"], tweetInfo["isReply"], False, None)
 
     def processRT (self, tweet):
         toTweetId = tweet[ProcessTweet.CONST_RT][ProcessTweet.CONST_ID]
@@ -153,26 +153,37 @@ class ProcessTweet ():
         updateFieldsReply=[]
         if isReply:
             replyId = tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID]
-            self.exist(tweetId, userId, quoteId, "RP", date)
+            #self.exist(tweetId, userId, quoteId, "RP", date)
 
-        if self.exist(tweetId, userId, quoteId, "QT", date) == False:
+        #if self.exist(tweetId, userId, quoteId, "QT", date) == False:
+        clearTweets = self.db.find(1, getTweet ("tweetId", tweetId))
+        if clearTweets.count() == 0:
+            self.db.insert_one(2, getInsertHistory(tweetId, userId, quoteId, "QT", date))
+
             if quoteId != None:
                 self.graph.upsertTypeAndRelation(quoteId, tweetId, "QT")
                 #self.updateParentGraph(tweetId, ProcessTweet.CONST_QUOTE_VALUE)
 
             if quoteId != None and replyId != None and quoteId != replyId:
                 value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_REPLY_VALUE
-                updateFieldsQuote.append({"field":CONST_VISIBILITY_VALUE, "value":value, "type":"+"})
-                updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_QUOTE, "value":1, "type":"+"})
                 updateFieldsReply.append({"field":CONST_VISIBILITY_VALUE, "value":value, "type":"+"})
                 updateFieldsReply.append({"field":CONST_VISIBILITY_COUNT_REPLY, "value":1, "type":"+"})
+
+                value2 = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_QUOTE_VALUE
+                updateFieldsQuote.append({"field":CONST_VISIBILITY_VALUE, "value":value2, "type":"+"})
+                updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_QUOTE, "value":1, "type":"+"})
+
                 self.db.update_oneV2(1, CONST_TWEET_ID, quoteId, updateClearTweetsV2(updateFieldsQuote))
                 self.db.update_oneV2(1, CONST_TWEET_ID, replyId, updateClearTweetsV2(updateFieldsReply))
                 #print ("QT: {0}\n RP: {1}".format(quoteId, replyId))
                 #TODO: Change to bulk
 
             elif quoteId != None and replyId != None and quoteId == replyId:
-                value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_REPLY_VALUE
+                if ProcessTweet.CONST_QUOTE_VALUE > ProcessTweet.CONST_REPLY_VALUE:
+                    value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_QUOTE_VALUE
+                else:
+                    value = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_FOLLOWERS_COUNT] * ProcessTweet.CONST_REPLY_VALUE
+
                 updateFieldsQuote.append({"field":CONST_VISIBILITY_VALUE, "value":value, "type":"+"})
                 updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_QUOTE, "value":1, "type":"+"})
                 updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_REPLY, "value":1, "type":"+"})
@@ -185,16 +196,20 @@ class ProcessTweet ():
                 updateFieldsQuote.append({"field":CONST_VISIBILITY_COUNT_QUOTE, "value":1, "type":"+"})
                 self.db.update_oneV2(1, CONST_TWEET_ID, quoteId, updateClearTweetsV2(updateFieldsQuote))
 
-        
-            self.processNormal(tweet, isReply, True)
+            self.processNormal(tweet, isReply, True, None)
+
+        else:
+            self.processNormal(tweet, isReply, True, clearTweets)
        
 
-    def processNormal (self, tweet, isReply, isQuote):
+    def processNormal (self, tweet, isReply, isQuote, clearTweets):
         tweetId = tweet[ProcessTweet.CONST_ID]
         userId = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_ID]
 
-        clearTweets = self.db.find(1, getTweet ("tweetId", tweetId))
-        if clearTweets.count() == 0:
+        if clearTweets == None and isQuote == False:
+            clearTweets = self.db.find(1, getTweet ("tweetId", tweetId))
+
+        if (isQuote == True and clearTweets == None) or (clearTweets.count() == 0 and isQuote == False):
             self.db.insert_one(1, getInsertClearTweet(tweet, isQuote, isReply, self))
             if isReply:
                 self.db.insert_one(2, getInsertHistory(tweetId, userId, tweet[ProcessTweet.CONST_REPLY_TO_STATUS_ID], "RP", tweet[ProcessTweet.CONST_CREATED_AT]))
@@ -221,6 +236,7 @@ class ProcessTweet ():
                 #print("update done")
                 dictionary = updateClearTweets(tweet, updateFields)
                 dictionary[CONST_RATIO_SUCCESS] = self.getRatioSuccess(tweet)
+                dictionary[CONST_RATIO_SUCCESS_ABSOLUTE] = self.getRatioSuccessAbsolute(tweet, clearTweets[0][CONST_VISIBILITY_VALUE])
                 self.db.update_one(1, "tweetId", tweetId, dictionary)
         
 
@@ -239,7 +255,20 @@ class ProcessTweet ():
         valueQuote = ProcessTweet.CONST_QUOTE_VALUE * (quoteCount / followersCount)
 
         return valueRT + valueReply + valueQuote
-        
+
+    def getRatioSuccessAbsolute (self, tweet, visibilityValue):
+        rtCount = tweet[ProcessTweet.CONST_RT_COUNT]
+        replyCount = tweet[ProcessTweet.CONST_REPLY_COUNT]
+        quoteCount = tweet[ProcessTweet.CONST_QUOTE_COUNT]
+
+        if visibilityValue <= 0:
+            visibilityValue = 1
+
+        valueRT = ProcessTweet.CONST_RT_VALUE * (rtCount / visibilityValue)
+        valueReply = ProcessTweet.CONST_REPLY_VALUE * (replyCount / visibilityValue)
+        valueQuote = ProcessTweet.CONST_QUOTE_VALUE * (quoteCount / visibilityValue)
+
+        return valueRT + valueReply + valueQuote
 
     def getOriginalTweet(self, tweet):
         auxTweet = tweet
