@@ -120,6 +120,7 @@ class ProcessTweet ():
         tweetId = tweet[ProcessTweet.CONST_ID]
         userId = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_ID]
         date = tweet[ProcessTweet.CONST_CREATED_AT]
+
         if self.exist(tweet[ProcessTweet.CONST_ID], userId, toTweetId, 'RT', date) == False:
             updateFields=[]
             if toTweetId != None:
@@ -236,7 +237,6 @@ class ProcessTweet ():
                 #print("update done")
                 dictionary = updateClearTweets(tweet, updateFields)
                 dictionary[CONST_RATIO_SUCCESS] = self.getRatioSuccess(tweet)
-                dictionary[CONST_RATIO_SUCCESS_ABSOLUTE] = self.getRatioSuccessAbsolute(tweet, clearTweets[0][CONST_VISIBILITY_VALUE])
                 self.db.update_one(1, "tweetId", tweetId, dictionary)
         
 
@@ -253,20 +253,6 @@ class ProcessTweet ():
         valueRT = ProcessTweet.CONST_RT_VALUE * (rtCount / followersCount)
         valueReply = ProcessTweet.CONST_REPLY_VALUE * (replyCount / followersCount)
         valueQuote = ProcessTweet.CONST_QUOTE_VALUE * (quoteCount / followersCount)
-
-        return valueRT + valueReply + valueQuote
-
-    def getRatioSuccessAbsolute (self, tweet, visibilityValue):
-        rtCount = tweet[ProcessTweet.CONST_RT_COUNT]
-        replyCount = tweet[ProcessTweet.CONST_REPLY_COUNT]
-        quoteCount = tweet[ProcessTweet.CONST_QUOTE_COUNT]
-
-        if visibilityValue <= 0:
-            visibilityValue = 1
-
-        valueRT = ProcessTweet.CONST_RT_VALUE * (rtCount / visibilityValue)
-        valueReply = ProcessTweet.CONST_REPLY_VALUE * (replyCount / visibilityValue)
-        valueQuote = ProcessTweet.CONST_QUOTE_VALUE * (quoteCount / visibilityValue)
 
         return valueRT + valueReply + valueQuote
 

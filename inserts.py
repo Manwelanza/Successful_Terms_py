@@ -42,7 +42,6 @@ def getInsertClearTweet (tweet, isQuote, isReply, processTweet):
     clearTweet[processTweet.CONST_CREATED_AT] = tweet[processTweet.CONST_CREATED_AT]
 
     clearTweet[CONST_RATIO_SUCCESS] = processTweet.getRatioSuccess(tweet)
-    clearTweet[CONST_RATIO_SUCCESS_ABSOLUTE] = processTweet.getRatioSuccessAbsolute(tweet, clearTweet[CONST_VISIBILITY_VALUE])
     
     if isQuote is True:
         clearTweet[CONST_IS_QUOTE] = True
