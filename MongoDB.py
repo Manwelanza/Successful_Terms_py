@@ -98,3 +98,25 @@ class MongoDB ():
         
         else:
             return False
+
+    def update_bulk(self, collection, dataMap):
+        if dataMap == None or len(dataMap) == 0:
+            return False
+        
+        else:
+            if (collection == 0 or collection == MongoDB.TWEETS_COLLECTION):
+                bulk =  self.connect2MongoDB.getCollection(MongoDB.TWEETS_COLLECTION).initialize_unordered_bulk_op()
+
+            elif collection == 1 or collection == MongoDB.CLEAR_TWEETS_COLLECTION:
+                bulk =  self.connect2MongoDB.getCollection(MongoDB.CLEAR_TWEETS_COLLECTION).initialize_unordered_bulk_op()
+
+            elif collection == 2 or collection == MongoDB.HISTORY_COLLECTION:
+                bulk =  self.connect2MongoDB.getCollection(MongoDB.HISTORY_COLLECTION).initialize_unordered_bulk_op()
+            else:
+                return False
+            
+            for id in dataMap.keys():
+                bulk.find({"tweetId":id}).update({"$set":dataMap[id]})
+            
+            bulk.execute()
+            return True

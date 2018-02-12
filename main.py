@@ -1,13 +1,9 @@
 #  -*- coding: utf-8 -*-
 import sys
 import datetime
-from MongoDBConnect import *
-from MongoDB import *
-from queries import *
-from processTweet import *
-from Neo4JDBConnect import *
-from Neo4JDB import *
-from credentials import *
+from addAbsoluteEfficiency import addAbsoluteEfficiency
+from addVisibilityGraph import addVisibilityGraph
+from fillClearTweet import *
 
 if __name__ == "__main__":
     print ("Start: {0}".format(datetime.datetime.now()))
@@ -17,7 +13,7 @@ if __name__ == "__main__":
     db = MongoDB(connectMongoDB)
     graph = Neo4jDB (Connect2Neo4J (CONST_NEO4J_URI, CONST_NEO4J_USER, CONST_NEO4J_PASSWORD))
 
-    tweets = db.find(MongoDB.TWEETS_COLLECTION)
+    """tweets = db.find(MongoDB.TWEETS_COLLECTION)
     #Inside of MongoDB.find() --> 0 = MongoDB.TWEETS_COLLECTION
     #tweet = db.find(0, getTweet("id_str",'917946195410128897'))
 
@@ -25,9 +21,13 @@ if __name__ == "__main__":
 
     process = ProcessTweet (db, graph)
     for t in tweets:
-        process.process(t)
+        process.process(t)"""
+
+    fillClearTweet(db, graph)
+    addAbsoluteEfficiency(db)
+    addVisibilityGraph(db, graph)
 
 
     graph.connect2Neo4J.closeDB()
 
-    print ("Stop: {0}".format(datetime.datetime.now()))
+    print ("\nStop: {0}".format(datetime.datetime.now()))

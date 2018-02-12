@@ -6,19 +6,13 @@ from MongoDB import *
 from queries import *
 from processTweet import *
 
-if __name__ == "__main__":
-    print ("Start RSA: {0}".format(datetime.datetime.now()))
-   
-    connectMongoDB = Connect2MongoDB('localhost', 27017)
-    connectMongoDB.setDB('test1') 
-    db = MongoDB(connectMongoDB)
+def addAbsoluteEfficiency (dbMongo):
+    print ("\nStart RSA: {0}".format(datetime.datetime.now()))
 
-    tweets = db.find(MongoDB.CLEAR_TWEETS_COLLECTION, {CONST_RATIO_SUCCESS_ABSOLUTE: { "$exists" : False}})
-    #Inside of MongoDB.find() --> 0 = MongoDB.TWEETS_COLLECTION
-    #tweet = db.find(0, getTweet("id_str",'917946195410128897'))
+    tweets = dbMongo.find(MongoDB.CLEAR_TWEETS_COLLECTION, {CONST_RATIO_SUCCESS_ABSOLUTE: { "$exists" : False}})
 
-
-    bulk = connectMongoDB.getCollection(MongoDB.CLEAR_TWEETS_COLLECTION).initialize_unordered_bulk_op()
+    #bulk = connectMongoDB.getCollection(MongoDB.CLEAR_TWEETS_COLLECTION).initialize_unordered_bulk_op()
+    bulkUpdateMap = dict()
     for t in tweets:
         visibilityValue = t[CONST_VISIBILITY_VALUE]
         rtCount = t[ProcessTweet.CONST_RT_COUNT]
@@ -29,9 +23,10 @@ if __name__ == "__main__":
         valueReply = ProcessTweet.CONST_REPLY_VALUE * (replyCount / visibilityValue)
         valueQuote = ProcessTweet.CONST_QUOTE_VALUE * (quoteCount / visibilityValue)
 
-        bulk.find({CONST_TWEET_ID:t[CONST_TWEET_ID]}).update({"$set":{CONST_RATIO_SUCCESS_ABSOLUTE: valueRT + valueReply + valueQuote}})
+        bulkUpdateMap[t[CONST_TWEET_ID]] = {CONST_RATIO_SUCCESS_ABSOLUTE: valueRT + valueReply + valueQuote}
+        #bulk.find({CONST_TWEET_ID:t[CONST_TWEET_ID]}).update({"$set":{CONST_RATIO_SUCCESS_ABSOLUTE: valueRT + valueReply + valueQuote}})
 
-    bulk.execute()
-
+    #bulk.execute()
+    dbMongo.update_bulk(MongoDB.CLEAR_TWEETS_COLLECTION, bulkUpdateMap)
 
     print ("Stop RSA: {0}".format(datetime.datetime.now()))

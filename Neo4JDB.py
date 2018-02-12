@@ -23,7 +23,7 @@ class Neo4jDB():
             return None
 
     def upsert (self, root, tweetId):
-        query = "MERGE (t:Tweet {id:$id}) ON CREATE SET t = {id:$id, root:$root, visibility:0}"
+        query = "MERGE (t:Tweet {id:$id}) ON CREATE SET t = {id:$id, root:$root, visibility:0, childs:0}"
         db = self.connect2Neo4J.getDB()
         if db != None:
             return db.run(query, id=tweetId, root=root)
@@ -51,7 +51,7 @@ class Neo4jDB():
             MATCH (t2: Tweet {id:$parent})
             USING INDEX t2:Tweet(id) 
             MERGE (t:Tweet {id:$id})
-            ON CREATE SET t = {id:$id, root:$boolean, visibility:0}
+            ON CREATE SET t = {id:$id, root:$boolean, visibility:0, childs:0}
             ON MATCH SET t.root = $boolean
             MERGE (t2)<-[r:RELTYPE]-(t)
             ON CREATE SET r = {type:$relType, parentId:$parent}
@@ -134,7 +134,7 @@ class Neo4jDB():
             UNWIND {rows} as row
             MATCH (t:Tweet {id:row.id}) 
             USING INDEX t:Tweet(id) 
-            SET t.visibility = t.visibility + row.visibility
+            SET t.visibility = row.visibility, t.childs = row.childs
             """
         db = self.connect2Neo4J.getDB()
         if db != None:
