@@ -31,6 +31,16 @@ def getHistory(tweetId, userId = None, toTweetId=None, type_str = None):
 
     return query
 
+def getHistoryV2(toTweetId, userId = None, type_str = None):
+    query = {}
+    query["toTweetId"] = toTweetId
+    if userId != None:
+        query ["userId"] = userId
+    if type_str != None:
+        query["type"] = type_str
+
+    return query
+
 
 
 

@@ -2,6 +2,7 @@ class Neo4jDB():
 
     def __init__(self, connect2Neo4J):
         self.connect2Neo4J = connect2Neo4J
+        self.attempts = 3
 
     def callDB (self, query):
         db = self.connect2Neo4J.getDB()
@@ -17,16 +18,36 @@ class Neo4jDB():
             RETURN n.id AS rootId , n2 AS child , r AS relation
         """
         db = self.connect2Neo4J.getDB()
+        countAttempts = 0
         if db != None:
-            return db.run(query)
+            while countAttempts < self.attempts:
+                try:
+                    return db.run(query)
+                except Exception as e:
+                    countAttempts+=1
+                    print("Exception {0}: {1} {2}. Not critical. Continuing...".format(str(countAttempts), type(e), e))
+            
+            if countAttempts >= self.attempts:
+                print("GetGraphs can't be executed.")
+                return None
         else:
             return None
 
     def upsert (self, root, tweetId):
         query = "MERGE (t:Tweet {id:$id}) ON CREATE SET t = {id:$id, root:$root, visibility:0, childs:0}"
         db = self.connect2Neo4J.getDB()
+        countAttempts = 0
         if db != None:
-            return db.run(query, id=tweetId, root=root)
+            while countAttempts < self.attempts:
+                try:
+                    return db.run(query, id=tweetId, root=root)
+                except Exception as e:
+                    countAttempts+=1
+                    print("Exception {0}: {1} {2}. Not critical. Continuing...".format(str(countAttempts), type(e), e))
+            
+            if countAttempts >= self.attempts:
+                print("Upsert can't be executed. TweetId: {0}".format(tweetId))
+                return None
         else:
             return None
 
@@ -59,8 +80,18 @@ class Neo4jDB():
         """
 
         db = self.connect2Neo4J.getDB()
+        countAttempts = 0
         if db != None:
-            return db.run(query, id=tweetId, parent = parentId, relType = reltype, boolean = False)
+            while countAttempts < self.attempts:
+                try:
+                    return db.run(query, id=tweetId, parent = parentId, relType = reltype, boolean = False)
+                except Exception as e:
+                    countAttempts+=1
+                    print("Exception {0}: {1} {2}. Not critical. Continuing...".format(str(countAttempts), type(e), e))
+            
+            if countAttempts >= self.attempts:
+                print("UpsertTypeAndRelation can't be executed. TweetId: {0}".format(tweetId))
+                return None
         else:
             return None
 
@@ -136,10 +167,20 @@ class Neo4jDB():
             USING INDEX t:Tweet(id) 
             SET t.visibility = row.visibility, t.childs = row.childs
             """
+        countAttempts = 0
         db = self.connect2Neo4J.getDB()
         if db != None:
-            db.run(query, rows=dataList)
-            return True
+            while countAttempts < self.attempts:
+                try:
+                    db.run(query, rows=dataList)
+                    return True
+                except Exception as e:
+                    countAttempts+=1
+                    print("Exception {0}: {1} {1}. Not critical. Continuing...".format(str(countAttempts), type(e), e))
+            
+            if countAttempts >= self.attempts:
+                print("BulkUpdate can't be executed. Datalist: {0}".format(dataList))
+                return False
         else:
             return False
     

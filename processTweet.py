@@ -135,7 +135,7 @@ class ProcessTweet ():
     def exist (self, tweetId, userId, toTweetId, type_str, date, insert=True):
         #Change this query to search history. It could be wrong, it should search by userId, toTweetId and type_str
         #Then if it exists, it should check tweetId. 
-        history = self.db.find(2, getHistory(tweetId, userId, toTweetId, type_str))
+        history = self.db.find(2, getHistoryV2(toTweetId,userId, type_str))
         if history.count() == 0:
             if insert:
                 self.db.insert_one(2, getInsertHistory(tweetId, userId, toTweetId, type_str, date))
