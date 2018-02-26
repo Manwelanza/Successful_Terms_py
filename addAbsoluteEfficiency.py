@@ -19,6 +19,9 @@ def addAbsoluteEfficiency (dbMongo):
         replyCount = t[ProcessTweet.CONST_REPLY_COUNT]
         quoteCount = t[ProcessTweet.CONST_QUOTE_COUNT]
 
+        if visibilityValue <= 0:
+            visibilityValue = 1
+
         valueRT = ProcessTweet.CONST_RT_VALUE * (rtCount / visibilityValue)
         valueReply = ProcessTweet.CONST_REPLY_VALUE * (replyCount / visibilityValue)
         valueQuote = ProcessTweet.CONST_QUOTE_VALUE * (quoteCount / visibilityValue)

@@ -18,6 +18,18 @@ class MongoDB ():
 
         return None
 
+    def getSort (self, collection, querySort):
+        if (collection == 0 or collection == MongoDB.TWEETS_COLLECTION):
+            return self.connect2MongoDB.getCollection(MongoDB.TWEETS_COLLECTION).find().sort([querySort])
+
+        elif collection == 1 or collection == MongoDB.CLEAR_TWEETS_COLLECTION:
+            return self.connect2MongoDB.getCollection(MongoDB.CLEAR_TWEETS_COLLECTION).find().sort([querySort])
+
+        elif collection == 2 or collection == MongoDB.HISTORY_COLLECTION:
+            return self.connect2MongoDB.getCollection(MongoDB.HISTORY_COLLECTION).find().sort([querySort])
+
+        return None
+
     def insert_one (self, collection, data = None):
         if data is not None:
             if (collection == 0 or collection == MongoDB.TWEETS_COLLECTION):
