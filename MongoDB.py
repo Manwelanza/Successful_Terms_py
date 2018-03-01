@@ -18,15 +18,27 @@ class MongoDB ():
 
         return None
 
-    def getSort (self, collection, querySort):
+    def getSort (self, collection, querySort, limitSize=0):
         if (collection == 0 or collection == MongoDB.TWEETS_COLLECTION):
-            return self.connect2MongoDB.getCollection(MongoDB.TWEETS_COLLECTION).find().sort([querySort])
+            return self.connect2MongoDB.getCollection(MongoDB.TWEETS_COLLECTION).find().sort([querySort]).limit(limitSize)
 
         elif collection == 1 or collection == MongoDB.CLEAR_TWEETS_COLLECTION:
-            return self.connect2MongoDB.getCollection(MongoDB.CLEAR_TWEETS_COLLECTION).find().sort([querySort])
+            return self.connect2MongoDB.getCollection(MongoDB.CLEAR_TWEETS_COLLECTION).find().sort([querySort]).limit(limitSize)
 
         elif collection == 2 or collection == MongoDB.HISTORY_COLLECTION:
-            return self.connect2MongoDB.getCollection(MongoDB.HISTORY_COLLECTION).find().sort([querySort])
+            return self.connect2MongoDB.getCollection(MongoDB.HISTORY_COLLECTION).find().sort([querySort]).limit(limitSize)
+
+        return None
+
+    def getSortV2 (self, collection, metric, querySort, limitSize=0):
+        if (collection == 0 or collection == MongoDB.TWEETS_COLLECTION):
+            return self.connect2MongoDB.getCollection(MongoDB.TWEETS_COLLECTION).find({metric: { "$exists" : True}}).sort([querySort]).limit(limitSize)
+
+        elif collection == 1 or collection == MongoDB.CLEAR_TWEETS_COLLECTION:
+            return self.connect2MongoDB.getCollection(MongoDB.CLEAR_TWEETS_COLLECTION).find({metric: { "$exists" : True}}).sort([querySort]).limit(limitSize)
+
+        elif collection == 2 or collection == MongoDB.HISTORY_COLLECTION:
+            return self.connect2MongoDB.getCollection(MongoDB.HISTORY_COLLECTION).find({metric: { "$exists" : True}}).sort([querySort]).limit(limitSize)
 
         return None
 

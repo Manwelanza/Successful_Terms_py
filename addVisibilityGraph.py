@@ -67,7 +67,23 @@ def addVisibilityGraph (dbMongo, dbNeo):
                     tweetVisibility[id] = {"id":id, "visibility": tweetMap[i][j][k]["visibility"], "childs":tweetMap[i][j][k]["childs"]}
                     bulkUpdateMongo[id] = {CONST_MUFFLED_DISCUSSION:tweetMap[i][j][k]["visibility"], CONST_PURE_DISCUSSION:tweetMap[i][j][k]["childs"]}
 
-    dbMongo.update_bulk(MongoDB.CLEAR_TWEETS_COLLECTION, bulkUpdateMongo)
     dbNeo.bulkUpdate(list(tweetVisibility.values()))
 
+    data = list(dbNeo.getEmptyGraphs().records())
+    for i in range(len(data)):
+        nodeId = data[i]["nodeId"]
+        bulkUpdateMongo[nodeId] = {CONST_MUFFLED_DISCUSSION:0, CONST_PURE_DISCUSSION: 0}
+
+    dbMongo.update_bulk(MongoDB.CLEAR_TWEETS_COLLECTION, bulkUpdateMongo)
+
     print ("Stop Visibility graph: {0}".format(datetime.datetime.now()))
+
+
+if __name__ == "__main__":
+    connectMongoDB = Connect2MongoDB('localhost', 27017)
+    connectMongoDB.setDB('test1') 
+    db = MongoDB(connectMongoDB)
+
+    graph = Neo4jDB (Connect2Neo4J (CONST_NEO4J_URI, CONST_NEO4J_USER, CONST_NEO4J_PASSWORD))
+
+    addVisibilityGraph(db, graph)

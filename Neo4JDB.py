@@ -33,6 +33,27 @@ class Neo4jDB():
         else:
             return None
 
+    def getEmptyGraphs (self):
+        query = """
+            Match (n:Tweet {root:True}) WHERE NOT (n)<-[:RELTYPE *..]-(:Tweet) 
+            RETURN n.id as nodeId
+        """
+        db = self.connect2Neo4J.getDB()
+        countAttempts = 0
+        if db != None:
+            while countAttempts < self.attempts:
+                try:
+                    return db.run(query)
+                except Exception as e:
+                    countAttempts+=1
+                    print("Exception {0}: {1} {2}. Not critical. Continuing...".format(str(countAttempts), type(e), e))
+            
+            if countAttempts >= self.attempts:
+                print("GetGraphs can't be executed.")
+                return None
+        else:
+            return None
+
     def upsert (self, root, tweetId):
         query = "MERGE (t:Tweet {id:$id}) ON CREATE SET t = {id:$id, root:$root, visibility:0, childs:0}"
         db = self.connect2Neo4J.getDB()
