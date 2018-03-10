@@ -4,12 +4,13 @@ import datetime
 from addAbsoluteEfficiency import addAbsoluteEfficiency
 from addVisibilityGraph import addVisibilityGraph
 from fillClearTweet import *
+from normalize import *
 
 if __name__ == "__main__":
     print ("Start: {0}".format(datetime.datetime.now()))
    
     connectMongoDB = Connect2MongoDB('localhost', 27017)
-    connectMongoDB.setDB('test1') 
+    connectMongoDB.setDB('Huelga') 
     db = MongoDB(connectMongoDB)
     graph = Neo4jDB (Connect2Neo4J (CONST_NEO4J_URI, CONST_NEO4J_USER, CONST_NEO4J_PASSWORD))
 
@@ -23,9 +24,10 @@ if __name__ == "__main__":
     for t in tweets:
         process.process(t)"""
 
-    fillClearTweet(db, graph)
+    #fillClearTweet(db, graph)
     addAbsoluteEfficiency(db)
     addVisibilityGraph(db, graph)
+    normalize(db)
 
 
     graph.connect2Neo4J.closeDB()

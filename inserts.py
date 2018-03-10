@@ -1,4 +1,4 @@
-CONST_TWEET_ID = "tweetId"
+CONST_TWEET_ID = "_id"
 CONST_IS_QUOTE = "isQuote"
 CONST_IS_REPLY = "isReply"
 CONST_REPLY_TO = "replyTo"
@@ -23,7 +23,7 @@ CONST_DATE = "date"
 
 def getInsertHistory (tweetId, userId, toTweetId, type_str, date):
     history = {}
-    history[CONST_TWEET_ID] = tweetId
+    history["tweetId"] = tweetId
     history[CONST_TO_TWEET_ID] = toTweetId
     history[CONST_USER_ID] = userId
     history[CONST_TYPE]= type_str

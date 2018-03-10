@@ -59,7 +59,7 @@ class ProcessTweet ():
 
     def processNormalTweet (self, tweet, isReply, isQuote):
         tweetId = tweet[ProcessTweet.CONST_ID]
-        clearTweets = self.db.find(1, getTweet ("tweetId", tweetId))
+        clearTweets = self.db.find(1, getTweet ("_id", tweetId))
         if clearTweets.count() == 0:
             self.db.insert_one(1, getInsertClearTweet(tweet, isQuote, isReply, self))
         else:
@@ -79,7 +79,7 @@ class ProcessTweet ():
 
             if len(updateFields) > 0:
                 print("update done")
-                self.db.update_one(1, "tweetId", tweetId, updateClearTweets(tweet, updateFields))
+                self.db.update_one(1, "_id", tweetId, updateClearTweets(tweet, updateFields))
             
 
     def process (self, tweet):
@@ -157,7 +157,7 @@ class ProcessTweet ():
             #self.exist(tweetId, userId, quoteId, "RP", date)
 
         #if self.exist(tweetId, userId, quoteId, "QT", date) == False:
-        clearTweets = self.db.find(1, getTweet ("tweetId", tweetId))
+        clearTweets = self.db.find(1, getTweet ("_id", tweetId))
         if clearTweets.count() == 0:
             self.db.insert_one(2, getInsertHistory(tweetId, userId, quoteId, "QT", date))
 
@@ -208,7 +208,7 @@ class ProcessTweet ():
         userId = tweet[ProcessTweet.CONST_USER][ProcessTweet.CONST_ID]
 
         if clearTweets == None and isQuote == False:
-            clearTweets = self.db.find(1, getTweet ("tweetId", tweetId))
+            clearTweets = self.db.find(1, getTweet ("_id", tweetId))
 
         if (isQuote == True and clearTweets == None) or (clearTweets.count() == 0 and isQuote == False):
             self.db.insert_one(1, getInsertClearTweet(tweet, isQuote, isReply, self))
@@ -237,7 +237,7 @@ class ProcessTweet ():
                 #print("update done")
                 dictionary = updateClearTweets(tweet, updateFields)
                 dictionary[CONST_RATIO_SUCCESS] = self.getRatioSuccess(tweet)
-                self.db.update_one(1, "tweetId", tweetId, dictionary)
+                self.db.update_one(1, "_id", tweetId, dictionary)
         
 
 
@@ -279,7 +279,7 @@ class ProcessTweet ():
                 self.nodes2Update[node.get("id")]["visibility"] += (valueToAdd / (level - node.get("level")))
 
     def insertNormalReplyNodeGraph (self, tweetId, replyId):
-        clearTweets = self.db.find(1, getTweet ("tweetId", replyId))
+        clearTweets = self.db.find(1, getTweet ("_id", replyId))
         if clearTweets.count() == 0:
             self.graph.upsert(True, replyId)
         

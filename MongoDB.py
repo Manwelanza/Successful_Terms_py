@@ -140,7 +140,7 @@ class MongoDB ():
                 return False
             
             for id in dataMap.keys():
-                bulk.find({"tweetId":id}).update({"$set":dataMap[id]})
+                bulk.find({"_id":id}).update({"$set":dataMap[id]})
             
             bulk.execute()
             return True

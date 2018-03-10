@@ -29,7 +29,7 @@ def getWeight (metric):
         return 1
 
     elif metric == CONST_VISIBILITY_VALUE:
-        return 0
+        return 0.4
 
     elif metric == CONST_MUFFLED_DISCUSSION:
         return 1
@@ -75,7 +75,7 @@ def normalize (dbMongo):
         bulkUpdateMap[t[CONST_TWEET_ID]][CONST_AVG_METRIC] = newMetric
 
     dbMongo.update_bulk(MongoDB.CLEAR_TWEETS_COLLECTION, bulkUpdateMap)
-    print ("\nStop Normalize: {0}".format(datetime.datetime.now()))
+    print ("Stop Normalize: {0}".format(datetime.datetime.now()))
 
 
 if __name__ == "__main__":
