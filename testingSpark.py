@@ -3,15 +3,46 @@ from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 from pyspark.ml.linalg import Vectors
 
-sc = SparkContext('local')
-spark = SparkSession(sc)
+from pyspark.sql.types import FloatType
+from pyspark.sql.functions import udf
+
+
+def addtest (a,b):
+    return a + b
+
+#sc = SparkContext('local')
+#spark = SparkSession(sc)
 #spark = SparkSession.builder.master("local").getOrCreate()
+spark = SparkSession \
+    .builder \
+    .appName("myAppTesting") \
+    .config("spark.mongodb.input.uri", "mongodb://127.0.0.1/test1.clearTweet") \
+    .config("spark.mongodb.output.uri", "mongodb://127.0.0.1/test1.clearTweet") \
+    .getOrCreate()
+
+
+df = spark.read.format("com.mongodb.spark.sql.DefaultSource").option("uri",
+"mongodb://127.0.0.1/testingMongo.test").load()
+
+#df.withColumn("a+b", df.a + df.b)
+func_udf = udf(addtest, FloatType())
+df = df.withColumn("a+b", func_udf(df.a, df.b))
+
+#df2 = df.sample(True, .5)
+#df2.drop("a+b")
+
+df.show()
+#df2.show()
+
+
+
+
 
 # Load training data
 """training = spark.read.format("libsvm")\
     .load("sparkData/sample_regression_data.txt")"""
 
-
+"""
 
 training = spark.createDataFrame(
     [
@@ -45,6 +76,8 @@ result = predictions0.select("features", "label", "prediction") \
 for row in result:
     print("features=%s, label=%s -> prediction=%s"
           % (row.features, row.label, row.prediction))
+
+"""
 """
 # Print the coefficients and intercept for linear regression
 print("Coefficients: %s" % str(lrModel.coefficients))
