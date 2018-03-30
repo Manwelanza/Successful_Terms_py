@@ -1,12 +1,13 @@
-from pyspark.ml.regression import LinearRegression
+from pyspark.ml.regression import LinearRegression, LinearRegressionModel
+from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 from pyspark.ml.linalg import Vectors
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml import Pipeline
 
-from pyspark.sql.types import IntegerType
-from pyspark.sql.types import ArrayType
+from pyspark.sql.types import IntegerType, ArrayType, FloatType
 from pyspark.sql.functions import udf
 from tools4Spark import *
 
@@ -75,9 +76,33 @@ df = assembler.transform(df)
 
 splitDF = df.randomSplit([0.2, 0.2, 0.6])
 
-lr = LinearRegression(maxIter=10, regParam=0.3, elasticNetParam=0.8)
-# Fit the model
-lrModel = lr.fit(splitDF[2])
+#train a model with a dataframe
+#lr = LinearRegression(maxIter=10, regParam=0.3, elasticNetParam=0.8)
+#lrModel = lr.fit(splitDF[2])
+
+
+lr = LinearRegression(maxIter=10, labelCol="label", featuresCol="features")
+ev = RegressionEvaluator(metricName="mse")
+paramGrid = ParamGridBuilder() \
+    .addGrid(lr.elasticNetParam, [1.0, 0.6, 0.2]) \
+    .addGrid(lr.regParam, [1.0, 0.6, 0.2]) \
+    .addGrid(lr.tol, [1.0, 0.6, 0.2]) \
+    .build()
+pipeline = Pipeline(stages=[lr])
+
+print ("\nStart Linear Regression train: {0}".format(datetime.datetime.now()))
+lrcv = CrossValidator(
+    estimator=pipeline,
+    estimatorParamMaps=paramGrid,
+    evaluator=ev,
+    numFolds=3
+)
+
+lrModel = lrcv.fit(splitDF[2])
+print ("\nStop Linear Regression train: {0}".format(datetime.datetime.now()))
+#Load a model from a file
+#lrModel = LinearRegressionModel.load("file:///D:/Data_TFM/code/models/LinearRegression")
+
 
 predictions0 = lrModel.transform(splitDF[1])
 evaluator = RegressionEvaluator(metricName="mse")
@@ -90,7 +115,7 @@ print("Mean Squared Error: " + str(mse))
 print("Root Mean Squared Error: " + str(rmse))
 print("Mean absolute error: " + str(mae))
 
-
+lrModel.write().overwrite().save("file:///D:/Data_TFM/code/models/LinearRegression")
 
 # Load training data
 """training = spark.read.format("libsvm")\
