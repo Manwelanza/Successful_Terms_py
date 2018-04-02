@@ -16,7 +16,7 @@ from pyspark.ml import Pipeline
 from pyspark.sql.types import IntegerType, ArrayType, FloatType
 from pyspark.sql.functions import udf
 from tools4Spark import *
-from crossValidation import bestLinearReggresion
+from crossValidation import bestLinearReggresion, bestGeneralizedLR, bestRandomForestRegressor
 
 #sc = SparkContext('local')
 #spark = SparkSession(sc)
@@ -136,7 +136,7 @@ print("Mean absolute error: " + str(mae))
 
 lrModel.write().overwrite().save("file:///D:/Data_TFM/code/models/LinearRegression")
 glrModel.write().overwrite().save("file:///D:/Data_TFM/code/models/GeneralizedLinearRegression")
-frfModel.write().overwrite().save("file:///D:/Data_TFM/code/models/RandomForestRegressor")
+rfrModel.write().overwrite().save("file:///D:/Data_TFM/code/models/RandomForestRegressor")
 
 # Load training data
 """training = spark.read.format("libsvm")\
