@@ -1,4 +1,10 @@
-from pyspark.ml.regression import LinearRegression, LinearRegressionModel
+"""
+import sys
+sys.path.append('D:/Windows/Mis documentos D/librerias python/mleap/python')
+import mleap
+"""
+
+from pyspark.ml.regression import LinearRegression, LinearRegressionModel, GeneralizedLinearRegression, RandomForestRegressor
 from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
@@ -10,6 +16,7 @@ from pyspark.ml import Pipeline
 from pyspark.sql.types import IntegerType, ArrayType, FloatType
 from pyspark.sql.functions import udf
 from tools4Spark import *
+from crossValidation import bestLinearReggresion
 
 #sc = SparkContext('local')
 #spark = SparkSession(sc)
@@ -79,8 +86,17 @@ splitDF = df.randomSplit([0.2, 0.2, 0.6])
 #train a model with a dataframe
 #lr = LinearRegression(maxIter=10, regParam=0.3, elasticNetParam=0.8)
 #lrModel = lr.fit(splitDF[2])
+lrModel = bestLinearReggresion (splitDF[2], splitDF[1], "mse")
+glrModel = bestGeneralizedLR (splitDF[2], splitDF[1], "mse")
+rfrModel = bestRandomForestRegressor (splitDF[2], splitDF[1], "mse")
 
+#glr = GeneralizedLinearRegression(family="gaussian", link="identity", maxIter=10, regParam=0.3, tol=0.0)
+#lrModel = glr.fit(splitDF[2])
 
+#rfr = RandomForestRegressor(numTrees=5, maxDepth=0, subsamplingRate=0.66)
+#lrModel = rfr.fit(splitDF[2])
+
+"""
 lr = LinearRegression(maxIter=10, labelCol="label", featuresCol="features")
 ev = RegressionEvaluator(metricName="mse")
 paramGrid = ParamGridBuilder() \
@@ -102,6 +118,8 @@ lrModel = lrcv.fit(splitDF[2])
 print ("\nStop Linear Regression train: {0}".format(datetime.datetime.now()))
 #Load a model from a file
 #lrModel = LinearRegressionModel.load("file:///D:/Data_TFM/code/models/LinearRegression")
+"""
+
 
 
 predictions0 = lrModel.transform(splitDF[1])
@@ -115,7 +133,10 @@ print("Mean Squared Error: " + str(mse))
 print("Root Mean Squared Error: " + str(rmse))
 print("Mean absolute error: " + str(mae))
 
+
 lrModel.write().overwrite().save("file:///D:/Data_TFM/code/models/LinearRegression")
+glrModel.write().overwrite().save("file:///D:/Data_TFM/code/models/GeneralizedLinearRegression")
+frfModel.write().overwrite().save("file:///D:/Data_TFM/code/models/RandomForestRegressor")
 
 # Load training data
 """training = spark.read.format("libsvm")\
