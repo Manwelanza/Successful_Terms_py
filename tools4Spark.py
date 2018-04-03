@@ -35,37 +35,6 @@ def getQT (attribute):
 def getTimeCol (attribute):
     return getTime(attribute.split()[3])
 
-def getCol (*data):
-    if data[1] == '0':
-        return getCharacters(data[0])
-    
-    elif data[1] == '1':
-        return getFollowers(data[0])
-    
-    elif data[1] == '2':
-        return getVerified(data[0])
-
-    elif data[1] == '3':
-        return getMedia(data[0])
-
-    elif data[1] == '4':
-        return getHashtags(data[0])
-
-    elif data[1] == '5':
-        return getMentions(data[0])
-
-    elif data[1] == '6':
-        return getCoordinates(data[0])
-
-    elif data[1] == '7':
-        return getRP(data[0])
-
-    elif data[1] == '8':
-        return getQT(data[0])
-    
-    elif data[1] == '9':
-        return getTimeCol(data[0])
-
 
 def getFeatures (*attributes):
     """

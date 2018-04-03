@@ -17,10 +17,29 @@ from pyspark.sql.types import IntegerType, ArrayType, FloatType
 from pyspark.sql.functions import udf
 from tools4Spark import *
 from crossValidation import bestLinearReggresion, bestGeneralizedLR, bestRandomForestRegressor
+from modelsSpark import ModelsSpark
 
 #sc = SparkContext('local')
 #spark = SparkSession(sc)
 #spark = SparkSession.builder.master("local").getOrCreate()
+
+ms = ModelsSpark()
+lrModel = ms.getOrCreateLR()
+glrModel = ms.getOrCreateGLR()
+rfrModel = ms.getOrCreateRFR()
+
+if lrModel != None:
+    print ("Existe LR")
+
+if glrModel != None:
+    print ("Existe GLR")
+
+if rfrModel != None:
+    print ("Existe RFR")
+
+
+
+"""
 spark = SparkSession \
     .builder \
     .appName("myAppTesting") \
@@ -61,6 +80,7 @@ df = df.drop("RS", "favorite_count", "visibility_value", "retweet_count", "creat
                 "tweetId", "reply_count", "text", "visibility_count_reply", "isReply", "visibility_count_quote", "user", "urls", \
                 "quote_count", "quoteTo", "isLong", "isQuote", "symbols", "lang", "RSA", "PD", "MD", "RSA_normalized", "MD_normalized", \
                 "visibility_value_normalized", "RS_normalized", "PD_normalized", "terms_count", "coordinates")
+"""
 
 """
 df = df.withColumn("features", getFeatures_udf(df.characters, df.user.followers_count, df.user.verified, df.urls, \
@@ -73,23 +93,24 @@ df = df.withColumn("features", getFeatures_udf(df.characters, df.user.followers_
                 "visibility_value_normalized", "RS_normalized", "PD_normalized", "coordinates", "media", "terms_count", "mentions", \
                 "hashtags", "characters")
 """
-
+"""
 assembler = VectorAssembler(
   inputCols=["characters", "followers", "verified", "media", "hashtags", "mentions", "rp", "qt", "time"], outputCol="features"
 )
-df = assembler.transform(df)
+df = assembler.transform(df)"""
 #df.count()
 #df.show(5)
 
-splitDF = df.randomSplit([0.2, 0.2, 0.6])
+#splitDF = df.randomSplit([0.2, 0.2, 0.6])
 
 #train a model with a dataframe
 #lr = LinearRegression(maxIter=10, regParam=0.3, elasticNetParam=0.8)
 #lrModel = lr.fit(splitDF[2])
+"""
 lrModel = bestLinearReggresion (splitDF[2], splitDF[1], "mse")
 glrModel = bestGeneralizedLR (splitDF[2], splitDF[1], "mse")
 rfrModel = bestRandomForestRegressor (splitDF[2], splitDF[1], "mse")
-
+"""
 #glr = GeneralizedLinearRegression(family="gaussian", link="identity", maxIter=10, regParam=0.3, tol=0.0)
 #lrModel = glr.fit(splitDF[2])
 
@@ -121,7 +142,7 @@ print ("\nStop Linear Regression train: {0}".format(datetime.datetime.now()))
 """
 
 
-
+"""
 predictions0 = lrModel.transform(splitDF[1])
 evaluator = RegressionEvaluator(metricName="mse")
 mse = evaluator.evaluate(predictions0)
@@ -137,7 +158,7 @@ print("Mean absolute error: " + str(mae))
 lrModel.write().overwrite().save("file:///D:/Data_TFM/code/models/LinearRegression")
 glrModel.write().overwrite().save("file:///D:/Data_TFM/code/models/GeneralizedLinearRegression")
 rfrModel.write().overwrite().save("file:///D:/Data_TFM/code/models/RandomForestRegressor")
-
+"""
 # Load training data
 """training = spark.read.format("libsvm")\
     .load("sparkData/sample_regression_data.txt")"""
