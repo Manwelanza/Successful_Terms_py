@@ -28,14 +28,6 @@ lrModel = ms.getOrCreateLR()
 glrModel = ms.getOrCreateGLR()
 rfrModel = ms.getOrCreateRFR()
 
-if lrModel != None:
-    print ("Existe LR")
-
-if glrModel != None:
-    print ("Existe GLR")
-
-if rfrModel != None:
-    print ("Existe RFR")
 
 
 
