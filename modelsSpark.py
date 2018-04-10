@@ -1,12 +1,13 @@
 from crossValidation import bestLinearReggresion, bestGeneralizedLR, bestRandomForestRegressor
 from pyspark.ml.regression import LinearRegressionModel, GeneralizedLinearRegressionModel, RandomForestRegressionModel
+from pyspark.ml.regression import LinearRegression
 
 from validateModels import ValidateModels
 from SparkTool import SparkTool
 
-CONST_LR_FILE = "file:///D:/Data_TFM/code/models/LinearRegression"
-CONST_GLR_FILE = "file:///D:/Data_TFM/code/models/GeneralizedLinearRegression"
-CONST_RFR_FILE = "file:///D:/Data_TFM/code/models/RandomForestRegressor" 
+CONST_LR_FILE = "file:///D:/Data_TFM/code/models/LinearRegression2"
+CONST_GLR_FILE = "file:///D:/Data_TFM/code/models/GeneralizedLinearRegression2"
+CONST_RFR_FILE = "file:///D:/Data_TFM/code/models/RandomForestRegressor2" 
 
 
 class ModelsSpark():
@@ -24,6 +25,7 @@ class ModelsSpark():
             if self.lrModel == None:
                 self.lrModel = LinearRegressionModel.load(CONST_LR_FILE)
         except :
+            print("Creating LR Model")
             self.lrModel =  self.createLR ()
         
         return self.lrModel
@@ -33,12 +35,13 @@ class ModelsSpark():
             lrModel = bestLinearReggresion (self.sparkTool.getTrainDF(), self.sparkTool.getMetricDF(), "mse")
             self.validations.validate(self.sparkTool.getTestDF(), lrModel, ValidateModels.LR)
         except:
+            print("RFR = None")
             lrModel = None
 
         try:
             lrModel.write().overwrite().save(CONST_LR_FILE)
         except :
-            pass
+            print("saved LR MODEL")
         
         return lrModel
 
@@ -47,6 +50,7 @@ class ModelsSpark():
             if self.glrModel == None:
                 self.glrModel = GeneralizedLinearRegressionModel.load(CONST_GLR_FILE)
         except :
+            print("Creating GLR Model")
             self.glrModel = self.createGLR ()
 
         return self.glrModel
@@ -56,12 +60,13 @@ class ModelsSpark():
             glrModel = bestGeneralizedLR (self.sparkTool.getTrainDF(), self.sparkTool.getMetricDF(), "mse")
             self.validations.validate(self.sparkTool.getTestDF(), glrModel, ValidateModels.GLR)
         except:
+            print("GLR = None")
             glrModel = None
         
         try:
             glrModel.write().overwrite().save(CONST_GLR_FILE)
         except:
-            pass
+            print("Error saving GLR MODEL")
 
         return glrModel
 
@@ -70,6 +75,7 @@ class ModelsSpark():
             if self.rfrModel == None:
                 self.rfrModel = RandomForestRegressionModel.load(CONST_RFR_FILE)
         except :
+            print("Creating RFR Model")
             self.rfrModel = self.createRFR ()
 
         return self.rfrModel
@@ -80,12 +86,13 @@ class ModelsSpark():
             self.validations.validate(self.sparkTool.getTestDF(), rfrModel, ValidateModels.RFR)
 
         except :
+            print("RFR = None")
             rfrModel = None
         
         try:
             rfrModel.write().overwrite().save(CONST_RFR_FILE)
         except :
-            pass
+            print("Error saving RFR MODEL")
         
         return rfrModel
 

@@ -35,6 +35,35 @@ def getQT (attribute):
 def getTimeCol (attribute):
     return getTime(attribute.split()[3])
 
+def getMorningCol (attribute):
+    hour = int(attribute.split()[3].split(":")[0])
+    if hour >= 7 and hour <= 12:
+        return 1
+    else:
+        return 0
+
+def getMiddayCol (attribute):
+    hour = int(attribute.split()[3].split(":")[0])
+    if hour >= 13 and hour <= 15:
+        return 1
+    else:
+        return 0
+
+def getAfternoonCol (attribute):
+    hour = int(attribute.split()[3].split(":")[0])
+    if hour >= 16 and hour <= 20:
+        return 1
+    else:
+        return 0
+
+def getNightCol (attribute):
+    hour = int(attribute.split()[3].split(":")[0])
+    if hour >= 21:
+        return 1
+    else:
+        return 0
+
+
 
 def getFeatures (*attributes):
     """

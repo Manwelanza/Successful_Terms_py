@@ -12,6 +12,10 @@ from pyspark.ml.linalg import Vectors
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml import Pipeline
+from pyspark.ml.feature import OneHotEncoderEstimator
+from pyspark.ml.feature import Normalizer
+from pyspark.ml.feature import MinMaxScaler
+from pyspark.sql import functions as F
 
 from pyspark.sql.types import IntegerType, ArrayType, FloatType
 from pyspark.sql.functions import udf
@@ -23,15 +27,28 @@ from modelsSpark import ModelsSpark
 #spark = SparkSession(sc)
 #spark = SparkSession.builder.master("local").getOrCreate()
 
+"""
+df = spark.createDataFrame([
+    (0, 5, 2),
+    (1, 10, 3),
+    (2, 1, 100)
+], ["id", "a", "b"])
+
+
+
+(maxA, minA, maxB, minB) = df.agg(F.max("a"), F.min("a"), F.max("b"), F.min("b")).head()
+
+"""
+
+
+"""
 ms = ModelsSpark()
 lrModel = ms.getOrCreateLR()
 glrModel = ms.getOrCreateGLR()
 rfrModel = ms.getOrCreateRFR()
-
-
-
-
 """
+
+
 spark = SparkSession \
     .builder \
     .appName("myAppTesting") \
@@ -53,10 +70,24 @@ getCoordinates_udf = udf (getCoordinates, IntegerType())
 getRP_udf = udf (getRP, IntegerType())
 getQT_udf = udf (getQT, IntegerType())
 getTimeCol_udf = udf (getTimeCol, IntegerType())
+getNightCol_udf = udf (getNightCol, IntegerType())
+getAfternoonCol_udf = udf (getAfternoonCol, IntegerType())
+getMiddayCol_udf = udf (getMiddayCol, IntegerType())
+getMorningCol_udf = udf (getMorningCol, IntegerType())
 #df = df.withColumn("coordinates", df.coordinates.cast("string"))
 
-df = df.withColumn("characters", getCharacters_udf(df.characters))
-df = df.withColumn("followers", getFollowers_udf(df.user.followers_count))
+(maxC, minC, maxT, minT, maxF, minF) = df.agg(F.max("characters"), F.min("characters"), F.max("terms_count"), F.min("terms_count"), F.max("user.followers_count"), F.min("user.followers_count")).head()
+print (maxC)
+print(minC)
+print(maxT)
+print(minT)
+print(maxF)
+print(minF)
+
+#df = df.withColumn("characters", getCharacters_udf(df.characters))
+df = df.withColumn("characters", (df.characters - minC) / (maxC - minC))
+df = df.withColumn("terms_count", (df.terms_count - minT) / (maxT - minT))
+df = df.withColumn("followers", (df.user.followers_count - minF) / (maxF - minF))
 df = df.withColumn("verified",getVerified_udf(df.user.verified))
 df = df.withColumn("media", getMedia_udf(df.urls))
 df = df.withColumn("hashtags", getHashtags_udf(df.hashtags))
@@ -66,13 +97,19 @@ df = df.withColumn("rp", getRP_udf(df.isReply))
 df = df.withColumn("qt", getQT_udf(df.isQuote))
 #df.withColumn("weekDay", df.created_at.split()[0])
 #df.withColumn("yearDay", )
-df = df.withColumn("time", getTimeCol_udf(df.created_at))
+#df = df.withColumn("time", getTimeCol_udf(df.created_at))
+df = df.withColumn("morning", getMorningCol_udf(df.created_at))
+df = df.withColumn("midday", getMiddayCol_udf(df.created_at))
+df = df.withColumn("afternoon", getAfternoonCol_udf(df.created_at))
+df = df.withColumn("night", getNightCol_udf(df.created_at))
+
 df = df.withColumnRenamed("AVG_M", "label")
 df = df.drop("RS", "favorite_count", "visibility_value", "retweet_count", "created_at", "replyTo", "visibility_count_RT", \
                 "tweetId", "reply_count", "text", "visibility_count_reply", "isReply", "visibility_count_quote", "user", "urls", \
                 "quote_count", "quoteTo", "isLong", "isQuote", "symbols", "lang", "RSA", "PD", "MD", "RSA_normalized", "MD_normalized", \
-                "visibility_value_normalized", "RS_normalized", "PD_normalized", "terms_count", "coordinates")
-"""
+                "visibility_value_normalized", "RS_normalized", "PD_normalized", "coordinates")
+
+df.show(20)
 
 """
 df = df.withColumn("features", getFeatures_udf(df.characters, df.user.followers_count, df.user.verified, df.urls, \
