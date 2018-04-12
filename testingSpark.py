@@ -23,22 +23,99 @@ from tools4Spark import *
 from crossValidation import bestLinearReggresion, bestGeneralizedLR, bestRandomForestRegressor
 from modelsSpark import ModelsSpark
 
+
 #sc = SparkContext('local')
 #spark = SparkSession(sc)
-#spark = SparkSession.builder.master("local").getOrCreate()
+spark = SparkSession.builder.master("local").getOrCreate()
 
-"""
+
+
+
+
 df = spark.createDataFrame([
-    (0, 5, 2),
-    (1, 10, 3),
-    (2, 1, 100)
+    (1, 10, 31),
+    (1, 10, 32),
+    (1, 10, 33),
+    (1, 10, 34),
+    (1, 10, 35),
+    (1, 10, 36),
+    (1, 10, 37),
+    (1, 10, 38),
+    (1, 10, 39),
+    (1, 10, 311),
+    (1, 10, 312),
+    (1, 10, 313),
+    (1, 10, 314),
+    (1, 10, 315),
+    (1, 10, 316),
+    (1, 10, 317),
+    (1, 10, 318),
+    (1, 10, 319),
+    (1, 10, 3191),
+    (1, 10, 3192),
+    (1, 1, 1001),
+    (0, 1, 1002),
+    (0, 1, 1003),
+    (0, 1, 1004),
+    (0, 1, 1005),
+    (0, 1, 1006),
+    (0, 1, 1007),
+    (0, 1, 1008),
+    (0, 1, 1009),
+    (0, 1, 10011),
+    (0, 1, 10012),
+    (0, 1, 10013),
+    (0, 1, 10014),
+    (0, 1, 10015),
+    (0, 1, 10016),
+    (0, 1, 10017),
+    (0, 1, 10018),
+    (0, 1, 10019),
+    (0, 1, 10021),
+    (0, 1, 10022),
+    (0, 1, 10023),
+    (0, 1, 10024),
+    (0, 1, 10025),
+    (0, 1, 10026),
+    (0, 1, 10027),
+    (0, 1, 10028),
+    (0, 1, 10029),
+    (0, 1, 10031),
+    (0, 1, 10032),
+    (0, 1, 10033),
+    (0, 1, 10034),
+    (0, 1, 10035),
+    (0, 1, 10036),
+    (0, 1, 10038),
+    (0, 1, 10039),
+    (0, 1, 10040),
+    (0, 1, 10041),
+    (0, 1, 10042),
+    (0, 1, 10043),
+    (0, 1, 10044),
+    (0, 1, 10045),
+    (0, 1, 10046),
+    (0, 1, 10047),
+    (0, 1, 10048),
+    (0, 1, 10049)
 ], ["id", "a", "b"])
 
 
+df.groupBy("id").count().show()
+#(maxA, minA, maxB, minB) = df.agg(F.max("a"), F.min("a"), F.max("b"), F.min("b")).head()
 
-(maxA, minA, maxB, minB) = df.agg(F.max("a"), F.min("a"), F.max("b"), F.min("b")).head()
+sampled = df.stat.sampleBy("id", {0:0.6, 1:0.6})
+sampled.groupBy("id").count().show()
 
-"""
+df2 = df.join(sampled, "b", "left_anti")
+sampled2 = df2.stat.sampleBy("id", {0:0.5, 1:0.5})
+sampled2.groupBy("id").count().show()
+
+sampled3 = df2.join(sampled2, "b", "left_anti")
+sampled3.groupBy("id").count().show()
+
+df3 = sampled.unionByName(sampled2).unionByName(sampled3)
+df3.groupBy("id").count().show()
 
 
 """
@@ -48,7 +125,7 @@ glrModel = ms.getOrCreateGLR()
 rfrModel = ms.getOrCreateRFR()
 """
 
-
+"""
 spark = SparkSession \
     .builder \
     .appName("myAppTesting") \
@@ -110,7 +187,7 @@ df = df.drop("RS", "favorite_count", "visibility_value", "retweet_count", "creat
                 "visibility_value_normalized", "RS_normalized", "PD_normalized", "coordinates")
 
 df.show(20)
-
+"""
 """
 df = df.withColumn("features", getFeatures_udf(df.characters, df.user.followers_count, df.user.verified, df.urls, \
                                                 df.hashtags, df.mentions, df.coordinates, df.isReply, df.isQuote, \

@@ -10,8 +10,12 @@ from tools4Spark import *
 class SparkTool ():
 
     CONST_SEED = 5
+    CONST_TYPE_REGRESSION = "models"
+    CONST_TYPE_CLASIFICATION = "clasification"
+    CONST_MIN_VALUE_SUCCESS = 0.000053632738945161846  #20%
 
-    def __init__ (self, dbName="test1", collectionName="clearTweet"):
+    def __init__ (self, typeSparkTool, dbName="test1", collectionName="clearTweet"):
+        self.typeSparkTool = typeSparkTool
         self.db = dbName
         self.collection = collectionName
         self.splitDF = None
@@ -70,7 +74,12 @@ class SparkTool ():
         self.df = self.df.withColumn("midday", self.getMiddayCol_udf(self.df.created_at))
         self.df = self.df.withColumn("afternoon", self.getAfternoonCol_udf(self.df.created_at))
         self.df = self.df.withColumn("night", self.getNightCol_udf(self.df.created_at))
-        self.df = self.df.withColumnRenamed("AVG_M", "label")
+
+        if self.typeSparkTool == SparkTool.CONST_TYPE_CLASIFICATION:
+            self.df = self.df.withColumn("label", 1 if self.df.AVG_M >= SparkTool.CONST_MIN_VALUE_SUCCESS else 0)
+        else:
+            self.df = self.df.withColumnRenamed("AVG_M", "label")
+
         self.df = self.df.drop("RS", "favorite_count", "visibility_value", "retweet_count", "created_at", "replyTo", "visibility_count_RT", \
                         "tweetId", "reply_count", "text", "visibility_count_reply", "isReply", "visibility_count_quote", "user", "urls", \
                         "quote_count", "quoteTo", "isLong", "isQuote", "symbols", "lang", "RSA", "PD", "MD", "RSA_normalized", "MD_normalized", \
