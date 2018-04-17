@@ -1,6 +1,7 @@
-from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.evaluation import RegressionEvaluator, BinaryClassificationEvaluator
 
 class ValidateModels ():
+    #Regression
     MSE = "mse" #Mean Squared Error
     RMSE = "rmse" #Root Mean Squared Error
     MAE = "mae" #Mean absolute error
@@ -8,6 +9,14 @@ class ValidateModels ():
     LR = "lr"
     GLR = "glr"
     RFR = "rfr"
+
+    #Classification
+    ROC = "areaUnderROC"
+    PR = "areaUnderPR"
+    
+    NB = "nb"
+    LSVC = "lsvc"
+    LRC = "lrc"
 
     def __init__ (self):
         self.metrics = {
@@ -25,6 +34,18 @@ class ValidateModels ():
                 ValidateModels.MSE : None,
                 ValidateModels.RMSE : None,
                 ValidateModels.MAE : None
+            },
+            ValidateModels.NB : {
+                ValidateModels.ROC : None,
+                ValidateModels.PR : None,
+            },
+            ValidateModels.LSVC : {
+                ValidateModels.ROC : None,
+                ValidateModels.PR : None,
+            },
+            ValidateModels.LRC : {
+                ValidateModels.ROC : None,
+                ValidateModels.PR : None,
             }
         }
     
@@ -49,6 +70,22 @@ class ValidateModels ():
             ValidateModels.MAE : mae
         }
 
+    def validateClassification (self, df, model, modelName=None):
+        predictions0 = model.transform(df)
+
+        evaluator = BinaryClassificationEvaluator(metricName=ValidateModels.ROC)
+        roc = evaluator.evaluate(predictions0)
+        evaluator.setMetricName(ValidateModels.PR)
+        pr = evaluator.evaluate(predictions0)
+
+        if modelName != None:
+            self.metrics[modelName][ValidateModels.ROC] = roc
+            self.metrics[modelName][ValidateModels.PR] = pr
+        
+        return {
+            ValidateModels.ROC : roc,
+            ValidateModels.PR : pr
+        }
     
     def getMetrics (self, modelName=None, metricName=None):
         if metricName != None and modelName != None:
@@ -61,5 +98,8 @@ class ValidateModels ():
             return self.metrics
 
     def isValidated (self, modelName):
-        return self.metrics[modelName][ValidateModels.MSE] != None
+        if modelName == ValidateModels.NB or modelName == ValidateModels.LSVC or modelName == ValidateModels.LRC:
+            return self.metrics[modelName][ValidateModels.ROC] != None
+        else:
+            return self.metrics[modelName][ValidateModels.MSE] != None
 

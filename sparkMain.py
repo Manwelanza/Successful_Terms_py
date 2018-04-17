@@ -4,34 +4,44 @@ from modelsSpark import ModelsSpark
 
 
 if __name__ == "__main__":
-    sparkTool = SparkTool("test1", "clearTweet")
+    modelType = SparkTool.CONST_TYPE_CLASIFICATION
+    sparkTool = SparkTool(modelType, "test1", "clearTweet")
     modelSpark = ModelsSpark(sparkTool)
 
-    lrModel = modelSpark.getOrCreateLR()
-    glrModel = modelSpark.getOrCreateGLR()
-    rfrModel = modelSpark.getOrCreateRFR()
+    
+    if modelType == SparkTool.CONST_TYPE_CLASIFICATION:
+        model1 = modelSpark.getOrCreateLRC()
+        #model2 =
+        #model3 =  
+    else:
+        model1 = modelSpark.getOrCreateLR()
+        model2 = modelSpark.getOrCreateGLR()
+        model3 = modelSpark.getOrCreateRFR()
+        
 
-    lr = modelSpark.predictionAndValidation(sparkTool.getTestDF(), lrModel)
-    glr = modelSpark.predictionAndValidation(sparkTool.getTestDF(), glrModel)
-    rfr = modelSpark.predictionAndValidation(sparkTool.getTestDF(), rfrModel)
+    result1 = modelSpark.predictionAndValidation(modelType == SparkTool.CONST_TYPE_REGRESSION, sparkTool.getTestDF(), model1)
+    #result2 = modelSpark.predictionAndValidation(modelType == SparkTool.CONST_TYPE_REGRESSION, sparkTool.getTestDF(), model2)
+    #result3 = modelSpark.predictionAndValidation(modelType == SparkTool.CONST_TYPE_REGRESSION, sparkTool.getTestDF(), model3)
+    
 
-    print (lr[1])
-    print (glr[1])
-    print (rfr[1])
+    print (result1[1])
+    #print (result2[1])
+    #print (result3[1])
 
-    for row in lr[0]:
-        if (row.label > 0.1):
+    for row in result1[0]:
+        if (modelType == SparkTool.CONST_TYPE_REGRESSION and row.label > 0.1):
             print("label=%s -> LR-prediction=%s"
                 % (row.label, row.prediction))
 
-    for row in glr[0]:
+    """for row in result2[0]:
         if (row.label > 0.1):
             print("label=%s -> GLR-prediction=%s"
                 % (row.label, row.prediction))
 
     
-    for row in rfr[0]:
+    for row in result3[0]:
         if (row.label > 0.1):
             print("label=%s -> RFR-prediction=%s"
-                % (row.label, row.prediction))
+                % (row.label, row.prediction))"""
 
+    

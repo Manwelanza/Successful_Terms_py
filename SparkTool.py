@@ -12,7 +12,7 @@ class SparkTool ():
     CONST_SEED = 5
     CONST_TYPE_REGRESSION = "models"
     CONST_TYPE_CLASIFICATION = "clasification"
-    CONST_MIN_VALUE_SUCCESS = 0.000053632738945161846  #20%
+    
 
     def __init__ (self, typeSparkTool, dbName="test1", collectionName="clearTweet"):
         self.typeSparkTool = typeSparkTool
@@ -52,6 +52,7 @@ class SparkTool ():
         self.getAfternoonCol_udf = udf (getAfternoonCol, IntegerType())
         self.getMiddayCol_udf = udf (getMiddayCol, IntegerType())
         self.getMorningCol_udf = udf (getMorningCol, IntegerType())
+        self.getLabel_udf = udf (getLabel, IntegerType())
 
     def transformDF (self):
         self.df = self.df.drop("coordinates")
@@ -76,7 +77,7 @@ class SparkTool ():
         self.df = self.df.withColumn("night", self.getNightCol_udf(self.df.created_at))
 
         if self.typeSparkTool == SparkTool.CONST_TYPE_CLASIFICATION:
-            self.df = self.df.withColumn("label", 1 if self.df.AVG_M >= SparkTool.CONST_MIN_VALUE_SUCCESS else 0)
+            self.df = self.df.withColumn("label", self.getLabel_udf(self.df.AVG_M))
         else:
             self.df = self.df.withColumnRenamed("AVG_M", "label")
 
@@ -90,6 +91,18 @@ class SparkTool ():
         )
         self.df = assembler.transform(self.df)
 
+    def createSplitDF (self):
+        if self.typeSparkTool == SparkTool.CONST_TYPE_CLASIFICATION:
+            self.splitDF = []
+
+            self.splitDF.append (self.df.stat.sampleBy("label", {0:0.6, 1:0.6}, SparkTool.CONST_SEED))
+            df2 = self.df.join(self.splitDF[0], "_id", "left_anti")
+            self.splitDF.append (df2.stat.sampleBy("label", {0:0.5, 1:0.5}, SparkTool.CONST_SEED))
+            self.splitDF.append (df2.join(self.splitDF[1], "_id", "left_anti"))
+        else:
+            self.splitDF = self.df.randomSplit([0.6, 0.2, 0.2],  SparkTool.CONST_SEED)
+
+    
     def getSpark (self):
         return self.spark
 
@@ -98,18 +111,18 @@ class SparkTool ():
 
     def getTrainDF (self):
         if self.splitDF == None:
-            self.splitDF = self.df.randomSplit([0.2, 0.2, 0.6],  SparkTool.CONST_SEED)
+            self.createSplitDF()
 
-        return self.splitDF[2]
+        return self.splitDF[0]
 
     def getMetricDF (self):
         if self.splitDF == None:
-            self.splitDF = self.df.randomSplit([0.2, 0.2, 0.6],  SparkTool.CONST_SEED)
+            self.createSplitDF()
 
         return self.splitDF[1]
 
     def getTestDF (self):
         if self.splitDF == None:
-            self.splitDF = self.df.randomSplit([0.2, 0.2, 0.6],  SparkTool.CONST_SEED)
+            self.createSplitDF()
 
-        return self.splitDF[0]
+        return self.splitDF[2]

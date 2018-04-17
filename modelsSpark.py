@@ -1,5 +1,6 @@
-from crossValidation import bestLinearReggresion, bestGeneralizedLR, bestRandomForestRegressor
+from crossValidation import bestLinearReggresion, bestGeneralizedLR, bestRandomForestRegressor, bestNaivebayes, bestLinearSVC, bestLogisticRegression
 from pyspark.ml.regression import LinearRegressionModel, GeneralizedLinearRegressionModel, RandomForestRegressionModel
+from pyspark.ml.classification import NaiveBayesModel, LinearSVCModel, LogisticRegressionModel
 from pyspark.ml.regression import LinearRegression
 
 from validateModels import ValidateModels
@@ -9,6 +10,11 @@ CONST_LR_FILE = "file:///D:/Data_TFM/code/models/LinearRegression2"
 CONST_GLR_FILE = "file:///D:/Data_TFM/code/models/GeneralizedLinearRegression2"
 CONST_RFR_FILE = "file:///D:/Data_TFM/code/models/RandomForestRegressor2" 
 
+CONST_NB_FILE = "file:///D:/Data_TFM/code/models/NaiveBayes"
+CONST_LSVC_FILE = "file:///D:/Data_TFM/code/models/LinearSupportVectorMachine"
+CONST_RFC_FILE = "file:///D:/Data_TFM/code/models/RandomForestClassifier"
+CONST_LRC_FILE = "file:///D:/Data_TFM/code/models/LogisticRegressionClassification"     
+
 
 class ModelsSpark():
 
@@ -17,7 +23,91 @@ class ModelsSpark():
         self.lrModel = None
         self.glrModel = None
         self.rfrModel = None
+
+        self.nbModel = None
+        self.lsvrModel = None
+        self.rfcModel = None
+        self.lrcModel = None
+        self.LSVCModel = None
+        self.LRCModel = None
         self.validations = ValidateModels ()
+
+    def getOrCreateLRC (self):
+        try:
+            if self.LRCModel == None:
+                self.LRCModel = LogisticRegressionModel.load(CONST_LRC_FILE)
+        except:
+            print ("Creating LinearSVC Model")
+            self.LRCModel = self.createLRC()
+        
+        return self.LRCModel
+
+    def createLRC (self):
+        try:
+            LRCModel = bestLogisticRegression(self.sparkTool.getTrainDF(), self.sparkTool.getMetricDF(), "areaUnderROC")
+            self.validations.validateClassification(self.sparkTool.getTestDF(), LRCModel, ValidateModels.LRC)
+        except:
+            print("LinearSVC = None")
+            LRCModel = None
+        
+        try:
+            LRCModel.write().overwrite().save(CONST_LSVC_FILE)
+        except :
+            print("Error saving NB MODEL")
+
+        return LRCModel
+
+
+    def getOrCreateLSVC (self):
+        try:
+            if self.LSVCModel == None:
+                self.LSVCModel = LinearSVCModel.load(CONST_LSVC_FILE)
+        except:
+            print ("Creating LinearSVC Model")
+            self.LSVCModel = self.createLSVC()
+        
+        return self.LSVCModel
+
+    def createLSVC (self):
+        try:
+            LSVCModel = bestLinearSVC(self.sparkTool.getTrainDF(), self.sparkTool.getMetricDF(), "areaUnderROC")
+            self.validations.validateClassification(self.sparkTool.getTestDF(), LSVCModel, ValidateModels.LSVC)
+        except:
+            print("LinearSVC = None")
+            LSVCModel = None
+        
+        try:
+            LSVCModel.write().overwrite().save(CONST_LSVC_FILE)
+        except :
+            print("Error saving NB MODEL")
+
+        return LSVCModel
+        
+
+    def getOrCreateNB (self):
+        try:
+            if self.nbModel == None:
+                self.nbModel = NaiveBayesModel.load(CONST_NB_FILE)
+        except:
+            print ("Creating NB Model")
+            self.nbModel = self.createNB()
+        
+        return self.nbModel
+
+    def createNB (self):
+        try:
+            nbModel = bestNaivebayes(self.sparkTool.getTrainDF(), self.sparkTool.getMetricDF(), "areaUnderROC")
+            self.validations.validateClassification(self.sparkTool.getTestDF(), nbModel, ValidateModels.NB)
+        except:
+            print("NB = None")
+            nbModel = None
+        
+        try:
+            nbModel.write().overwrite().save(CONST_NB_FILE)
+        except :
+            print("Error saving NB MODEL")
+        
+        return nbModel
 
 
     def getOrCreateLR (self):
@@ -35,13 +125,13 @@ class ModelsSpark():
             lrModel = bestLinearReggresion (self.sparkTool.getTrainDF(), self.sparkTool.getMetricDF(), "mse")
             self.validations.validate(self.sparkTool.getTestDF(), lrModel, ValidateModels.LR)
         except:
-            print("RFR = None")
+            print("LR = None")
             lrModel = None
 
         try:
             lrModel.write().overwrite().save(CONST_LR_FILE)
         except :
-            print("saved LR MODEL")
+            print("Error saving LR MODEL")
         
         return lrModel
 
@@ -105,16 +195,19 @@ class ModelsSpark():
     def rfrValidated (self):
         return self.validations.isValidated(ValidateModels.RFR)
 
-    def getBestModel (self, metricname=ValidateModels.MSE):
-        if not self.lrValidated:
+    def nbValidated (self):
+        return self.validations.isValidated(ValidateModels.NB)
+
+    def getBestRegression (self, metricname=ValidateModels.MSE):
+        if not self.lrValidated():
             self.getOrCreateLR()
             self.validations.validate(self.sparkTool.getTestDF(), self.lrModel, ValidateModels.LR)
 
-        if not self.glrValidated:
+        if not self.glrValidated():
             self.getOrCreateGLR()
             self.validations.validate(self.sparkTool.getTestDF(), self.glrModel, ValidateModels.GLR)
 
-        if not self.rfrValidated:
+        if not self.rfrValidated():
             self.getOrCreateRFR()
             self.validations.validate(self.sparkTool.getTestDF(), self.rfrModel, ValidateModels.RFR)
 
@@ -131,24 +224,40 @@ class ModelsSpark():
 
         return bestModel
 
+    
+    def getBestClassification (self, metricname=ValidateModels.ROC):
+        if not self.nbValidated():
+            self.getOrCreateNB()
+            self.validations.validateClassification(self.sparkTool.getTestDF(), self.nbModel, ValidateModels.NB)
+
+        bestModel = self.nbModel
+        bestMetric = self.validations.getMetrics(ValidateModels.NB, metricname)
+
+        return bestModel
    
-    def prediction (self, dataDF=None, model=None):
+    def prediction (self, isRegression, dataDF=None, model=None):
         if dataDF == None:
            return None
 
         if model == None:
-            model = self.getBestModel()
+            if isRegression:
+                model = self.getBestRegression()
+            else:
+                model = self.getBestClassification()
 
         predictions = model.transform(dataDF)
         return predictions.select("features", "label", "prediction").collect()
 
 
-    def predictionAndValidation (self, dataDF=None, model=None):
+    def predictionAndValidation (self, isRegression, dataDF=None, model=None):
         if dataDF == None:
            return None
 
         if model == None:
-            model = self.getBestModel()
+            if isRegression:
+                model = self.getBestRegression()
+            else:
+                model = self.getBestClassification()
 
         predictions = model.transform(dataDF)
-        return [predictions.select("features", "label", "prediction").collect(), self.validations.validate(dataDF, model, None)]
+        return [predictions.select("features", "label", "prediction").collect(), self.validations.validate(dataDF, model, None) if isRegression else self.validations.validateClassification(dataDF, model, None)]

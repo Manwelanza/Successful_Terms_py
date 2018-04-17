@@ -102,6 +102,7 @@ df = spark.createDataFrame([
 
 
 df.groupBy("id").count().show()
+
 #(maxA, minA, maxB, minB) = df.agg(F.max("a"), F.min("a"), F.max("b"), F.min("b")).head()
 
 sampled = df.stat.sampleBy("id", {0:0.6, 1:0.6})

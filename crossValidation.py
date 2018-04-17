@@ -1,5 +1,6 @@
 from pyspark.ml.regression import LinearRegression, GeneralizedLinearRegression, RandomForestRegressor
-from pyspark.ml.evaluation import RegressionEvaluator
+from pyspark.ml.classification import NaiveBayes, LinearSVC, LogisticRegression
+from pyspark.ml.evaluation import RegressionEvaluator, BinaryClassificationEvaluator
 
 def getBestModel (models, data, metricToCompare):
     bestModel = None
@@ -15,6 +16,61 @@ def getBestModel (models, data, metricToCompare):
             bestModel = model
     
     return bestModel
+
+def getBestClassification (models, data, metricToCompare):
+    bestModel = None
+    bestMetric = None
+    evaluator = BinaryClassificationEvaluator(metricName=metricToCompare)
+
+    for model in models:
+        predictions = model.transform(data)
+        metric = evaluator.evaluate(predictions)
+
+        if bestMetric == None or bestMetric < metric:
+            bestMetric = metric
+            bestModel = model
+    
+    return bestModel
+
+
+def bestNaivebayes (trainDF, metricDF, metricToCompare):
+    """
+    smoothing = [1.0, 0.65, 0.3, 0.0]
+    modelType = ["multinomial"]
+    models = []
+    for mt in modelType:
+        for s in smoothing:
+            models.append(NaiveBayes (smoothing=s, modelType=mt).fit(trainDF))
+
+    return getBestClassification(models, metricDF, metricToCompare)
+    """
+    return NaiveBayes ().fit(trainDF)
+
+def bestLinearSVC (trainDF, metricDF, metricToCompare):
+    """
+    smoothing = [1.0, 0.65, 0.3, 0.0]
+    modelType = ["multinomial"]
+    models = []
+    for mt in modelType:
+        for s in smoothing:
+            models.append(LinearSVC (smoothing=s, modelType=mt).fit(trainDF))
+
+    return getBestClassification(models, metricDF, metricToCompare)
+    """
+    return LinearSVC ().fit(trainDF)
+
+def bestLogisticRegression (trainDF, metricDF, metricToCompare):
+    """
+    smoothing = [1.0, 0.65, 0.3, 0.0]
+    modelType = ["multinomial"]
+    models = []
+    for mt in modelType:
+        for s in smoothing:
+            models.append(LinearSVC (smoothing=s, modelType=mt).fit(trainDF))
+
+    return getBestClassification(models, metricDF, metricToCompare)
+    """
+    return LogisticRegression (family="auto").fit(trainDF)
 
 def bestLinearReggresion (trainDf, metricDF, metricToCompare):
     elasticNetParam = [1.0, 0.6, 0.2]

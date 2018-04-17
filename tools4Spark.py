@@ -1,6 +1,9 @@
 import datetime
 import numpy
 
+
+CONST_MIN_VALUE_SUCCESS = 0.000053632738945161846  #20%
+
 def getCharacters (attribute):
     return 0 if int(attribute) <= 0 else int(attribute)
 
@@ -62,6 +65,9 @@ def getNightCol (attribute):
         return 1
     else:
         return 0
+
+def getLabel (attribute):
+    return 1 if attribute >= CONST_MIN_VALUE_SUCCESS else 0
 
 
 
