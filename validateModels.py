@@ -5,6 +5,7 @@ class ValidateModels ():
     MSE = "mse" #Mean Squared Error
     RMSE = "rmse" #Root Mean Squared Error
     MAE = "mae" #Mean absolute error
+    R2 = "r2" #Mean R^2^ metric
 
     LR = "lr"
     GLR = "glr"
@@ -23,17 +24,20 @@ class ValidateModels ():
             ValidateModels.LR : {
                 ValidateModels.MSE : None,
                 ValidateModels.RMSE : None,
-                ValidateModels.MAE : None
+                ValidateModels.MAE : None,
+                ValidateModels.R2 : None
             },
             ValidateModels.GLR : {
                 ValidateModels.MSE : None,
                 ValidateModels.RMSE : None,
-                ValidateModels.MAE : None
+                ValidateModels.MAE : None,
+                ValidateModels.R2 : None
             },
             ValidateModels.RFR : {
                 ValidateModels.MSE : None,
                 ValidateModels.RMSE : None,
-                ValidateModels.MAE : None
+                ValidateModels.MAE : None,
+                ValidateModels.R2 : None
             },
             ValidateModels.NB : {
                 ValidateModels.ROC : None,
@@ -58,16 +62,20 @@ class ValidateModels ():
         rmse = evaluator.evaluate(predictions0)
         evaluator.setMetricName(ValidateModels.MAE)
         mae = evaluator.evaluate(predictions0)
+        evaluator.setMetricName(ValidateModels.R2)
+        r2 = evaluator.evaluate(predictions0)
 
         if modelName != None:
             self.metrics[modelName][ValidateModels.MSE] = mse
             self.metrics[modelName][ValidateModels.RMSE] = rmse
             self.metrics[modelName][ValidateModels.MAE] = mae
+            self.metrics[modelName][ValidateModels.R2] = r2
         
         return {
             ValidateModels.MSE : mse,
             ValidateModels.RMSE : rmse,
-            ValidateModels.MAE : mae
+            ValidateModels.MAE : mae,
+            ValidateModels.R2 : r2
         }
 
     def validateClassification (self, df, model, modelName=None):

@@ -6,14 +6,14 @@ from pyspark.ml.regression import LinearRegression
 from validateModels import ValidateModels
 from SparkTool import SparkTool
 
-CONST_LR_FILE = "file:///D:/Data_TFM/code/models/LinearRegression2"
-CONST_GLR_FILE = "file:///D:/Data_TFM/code/models/GeneralizedLinearRegression2"
-CONST_RFR_FILE = "file:///D:/Data_TFM/code/models/RandomForestRegressor2" 
+CONST_LR_FILE = "file:///D:/Data_TFM/code/models/AVG_M/LinearRegressionAVG_M"
+CONST_GLR_FILE = "file:///D:/Data_TFM/code/models/AVG_M/GeneralizedLinearRegressionAVG_M"
+CONST_RFR_FILE = "file:///D:/Data_TFM/code/models/AVG_M/RandomForestRegressorAVG_M" 
 
-CONST_NB_FILE = "file:///D:/Data_TFM/code/models/NaiveBayes"
-CONST_LSVC_FILE = "file:///D:/Data_TFM/code/models/LinearSupportVectorMachine"
-CONST_RFC_FILE = "file:///D:/Data_TFM/code/models/RandomForestClassifier"
-CONST_LRC_FILE = "file:///D:/Data_TFM/code/models/LogisticRegressionClassification"     
+CONST_NB_FILE = "file:///D:/Data_TFM/code/models/TFM/NaiveBayes"
+CONST_LSVC_FILE = "file:///D:/Data_TFM/code/models/TFM/LinearSupportVectorMachine"
+CONST_RFC_FILE = "file:///D:/Data_TFM/code/models/TFM/RandomForestClassifier"
+CONST_LRC_FILE = "file:///D:/Data_TFM/code/models/TFM/LogisticRegressionClassification"     
 
 
 class ModelsSpark():
