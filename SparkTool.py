@@ -79,12 +79,13 @@ class SparkTool ():
         if self.typeSparkTool == SparkTool.CONST_TYPE_CLASIFICATION:
             self.df = self.df.withColumn("label", self.getLabel_udf(self.df.AVG_M))
         else:
-            self.df = self.df.withColumnRenamed("AVG_M", "label")
+            self.df = self.df.withColumnRenamed("PD_normalized", "label")
+            self.df = self.df.filter(self.df.label >= 0)
 
         self.df = self.df.drop("RS", "favorite_count", "visibility_value", "retweet_count", "created_at", "replyTo", "visibility_count_RT", \
                         "tweetId", "reply_count", "text", "visibility_count_reply", "isReply", "visibility_count_quote", "user", "urls", \
-                        "quote_count", "quoteTo", "isLong", "isQuote", "symbols", "lang", "RSA", "PD", "MD", "RSA_normalized", "MD_normalized", \
-                        "visibility_value_normalized", "RS_normalized", "PD_normalized")
+                        "quote_count", "quoteTo", "isLong", "isQuote", "symbols", "lang", "RSA", "PD", "MD", "MD_normalized", \
+                        "AVG_M", "RS_normalized", "PD_normalized", "RSA_normalized", "visibility_value_normalized")
         
         assembler = VectorAssembler(
             inputCols=["characters", "followers", "verified", "media", "hashtags", "mentions", "rp", "qt", "terms_count", "morning", "midday", "afternoon", "night"], outputCol="features"

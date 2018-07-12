@@ -6,9 +6,9 @@ from pyspark.ml.regression import LinearRegression
 from validateModels import ValidateModels
 from SparkTool import SparkTool
 
-CONST_LR_FILE = "file:///D:/Data_TFM/code/models/AVG_M/LinearRegressionAVG_M"
-CONST_GLR_FILE = "file:///D:/Data_TFM/code/models/AVG_M/GeneralizedLinearRegressionAVG_M"
-CONST_RFR_FILE = "file:///D:/Data_TFM/code/models/AVG_M/RandomForestRegressorAVG_M" 
+CONST_LR_FILE = "file:///D:/Data_TFM/code/models/PD/LinearRegressionPD"
+CONST_GLR_FILE = "file:///D:/Data_TFM/code/models/PD/GeneralizedLinearRegressionPD"
+CONST_RFR_FILE = "file:///D:/Data_TFM/code/models/PD/RandomForestRegressorPD" 
 
 CONST_NB_FILE = "file:///D:/Data_TFM/code/models/TFM/NaiveBayes"
 CONST_LSVC_FILE = "file:///D:/Data_TFM/code/models/TFM/LinearSupportVectorMachine"
